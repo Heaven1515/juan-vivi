@@ -1,0 +1,41 @@
+{
+  "productName": "JUAN-VIVI",
+  "version": "1.0.0",
+  "identifier": "cl.notaria33.juan-vivi",
+  "build": {
+    "frontendDist": "../frontend"
+  },
+  "bundle": {
+    "active": true,
+    "targets": "nsis",
+    "externalBin": ["binaries/juan-vivi-backend"],
+    "windows": {
+      "nsis": {}
+    }
+  },
+  "app": {
+    "withGlobalTauri": true,
+    "windows": [
+      {
+        "label": "main",
+        "title": "JUAN-VIVI · 33ª Notaría",
+        "width": 1440,
+        "height": 900,
+        "minWidth": 1024,
+        "minHeight": 600
+      }
+    ],
+    "security": {
+      "csp": null
+    }
+  },
+  "plugins": {
+    "updater": {
+      "pubkey": "UPDATER_PUBKEY_PLACEHOLDER",
+      "endpoints": [
+        "https://github.com/Heaven1515/juan-vivi/releases/latest/download/latest.json"
+      ],
+      "dialog": true
+    }
+  }
+}

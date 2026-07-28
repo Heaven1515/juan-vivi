@@ -1,0 +1,15 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "identifier": "default",
+  "description": "Permisos por defecto de JUAN-VIVI",
+  "windows": ["main"],
+  "permissions": [
+    "core:default",
+    "dialog:allow-open",
+    "dialog:allow-save",
+    "shell:allow-open",
+    "opener:allow-open-path",
+    "updater:allow-check",
+    "updater:allow-download-and-install"
+  ]
+}

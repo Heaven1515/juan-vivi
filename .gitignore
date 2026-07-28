@@ -25,3 +25,5 @@ desktop.ini
 # ── Editor ─────────────────────────────────────────────────────────────────────
 .vscode/
 .idea/
+src-tauri/target/
+dist/
