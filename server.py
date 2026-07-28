@@ -25,22 +25,29 @@ else:
 sys.path.insert(0, str(RAIZ))
 
 # ── Check de licencia ─────────────────────────────────────────────────────────
+# API de GitHub — sin cache, siempre el valor real
 _LICENCIA_URL = (
-    "https://raw.githubusercontent.com/Heaven1515/juan-vivi/master/licencia.json"
+    "https://api.github.com/repos/Heaven1515/juan-vivi/contents/licencia.json"
 )
 
 def verificar_licencia() -> tuple[bool, str]:
     """
-    Consulta licencia.json en GitHub.
+    Consulta licencia.json via GitHub API (sin cache CDN).
     Retorna (activo, mensaje).
     Si no hay internet o falla la consulta → (True, '') — modo permisivo.
     """
     try:
         import urllib.request
         import json as _json
-        req = urllib.request.Request(_LICENCIA_URL, headers={"Cache-Control": "no-cache"})
-        with urllib.request.urlopen(req, timeout=2) as resp:
-            data = _json.loads(resp.read().decode())
+        import base64 as _b64
+        req = urllib.request.Request(
+            _LICENCIA_URL,
+            headers={"Accept": "application/vnd.github+json", "User-Agent": "juan-vivi"},
+        )
+        with urllib.request.urlopen(req, timeout=3) as resp:
+            meta = _json.loads(resp.read().decode())
+        # El contenido viene en base64
+        data = _json.loads(_b64.b64decode(meta["content"]).decode())
         return bool(data.get("activo", True)), str(data.get("mensaje", ""))
     except Exception:
         return True, ""   # permisivo si no hay internet
