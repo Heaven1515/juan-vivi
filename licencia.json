@@ -1,4 +1,4 @@
 {
-  "activo": true,
-  "mensaje": ""
+  "activo": false,
+  "mensaje": "Acceso suspendido temporalmente. Contacte al administrador."
 }
