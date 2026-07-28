@@ -24,6 +24,27 @@ else:
 
 sys.path.insert(0, str(RAIZ))
 
+# ── Check de licencia ─────────────────────────────────────────────────────────
+_LICENCIA_URL = (
+    "https://raw.githubusercontent.com/Heaven1515/juan-vivi/master/licencia.json"
+)
+
+def verificar_licencia() -> tuple[bool, str]:
+    """
+    Consulta licencia.json en GitHub.
+    Retorna (activo, mensaje).
+    Si no hay internet o falla la consulta → (True, '') — modo permisivo.
+    """
+    try:
+        import urllib.request
+        import json as _json
+        req = urllib.request.Request(_LICENCIA_URL, headers={"Cache-Control": "no-cache"})
+        with urllib.request.urlopen(req, timeout=2) as resp:
+            data = _json.loads(resp.read().decode())
+        return bool(data.get("activo", True)), str(data.get("mensaje", ""))
+    except Exception:
+        return True, ""   # permisivo si no hay internet
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
@@ -214,6 +235,14 @@ def agregar_caso_ep(body: AgregarCasoBody):
 @app.get("/firma/listar-casos")
 def listar_casos_ep():
     return {"ok": True, "casos": listar_casos()}
+
+
+# ── Licencia ─────────────────────────────────────────────────────────────────
+@app.get("/licencia")
+def get_licencia():
+    """El frontend consulta esto al arrancar para saber si puede operar."""
+    activo, mensaje = verificar_licencia()
+    return {"activo": activo, "mensaje": mensaje}
 
 
 # ── Main ─────────────────────────────────────────────────────────────────────

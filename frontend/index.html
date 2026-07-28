@@ -894,6 +894,23 @@
 </div>
 
 <!-- Notificación toast -->
+<!-- Pantalla de bloqueo de licencia -->
+<div id="bloqueoPantalla" style="
+  display:none;position:fixed;inset:0;z-index:9999;
+  background:linear-gradient(135deg,#050b28 0%,#1741b8 100%);
+  flex-direction:column;align-items:center;justify-content:center;gap:24px;
+  font-family:'Plus Jakarta Sans',sans-serif;color:#fff;text-align:center;padding:40px
+">
+  <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.7)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+  </svg>
+  <div style="font-size:22px;font-weight:700;opacity:.95">Acceso no disponible</div>
+  <div id="bloqueoMensaje" style="font-size:15px;opacity:.7;max-width:360px;line-height:1.6">
+    Esta aplicación ha sido desactivada.
+  </div>
+  <div style="font-size:12px;opacity:.4;margin-top:8px">33ª Notaría · JUAN-VIVI</div>
+</div>
+
 <div id="toast" class="aviso hidden"></div>
 
 <script>
@@ -1463,7 +1480,21 @@ async function init() {
   renderPDFs();   // lista vacía hasta que se entre a la vista Firma
 
   await initApi();
+  await checkLicencia();
   await checkUpdate();
+}
+
+async function checkLicencia() {
+  try {
+    const res = await apiFetch('/licencia');
+    if (!res.activo) {
+      const pantalla = document.getElementById('bloqueoPantalla');
+      if (res.mensaje) document.getElementById('bloqueoMensaje').textContent = res.mensaje;
+      pantalla.style.display = 'flex';
+    }
+  } catch(e) {
+    // Si el sidecar no respondió aún, dejar pasar
+  }
 }
 
 init();
