@@ -27,3 +27,5 @@ desktop.ini
 .idea/
 src-tauri/target/
 dist/
+.tauri-key
+icon_src.png
