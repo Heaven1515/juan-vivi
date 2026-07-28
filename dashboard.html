@@ -1,0 +1,1391 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>33ª Notaría · Prendas Autofin</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+  <style>
+    /* ── Reset ─────────────────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    /* ── Base ──────────────────────────────────────────────────────── */
+    body {
+      font-family: "Plus Jakarta Sans", system-ui, sans-serif;
+      background-color: #071133;
+      background-image:
+        radial-gradient(520px 380px at 6% 8%, rgba(111,157,255,0.20), transparent 70%),
+        radial-gradient(560px 420px at 2% 92%, rgba(111,157,255,0.16), transparent 72%),
+        linear-gradient(150deg, #050b28 0%, #0b1f5e 55%, #1741b8 100%);
+      min-height: 100vh;
+      color: #e9edf7;
+    }
+    input, button, select { font-family: inherit; }
+    input:focus-visible, button:focus-visible { outline: 2px solid #6f9dff; outline-offset: 2px; }
+    input::placeholder { color: #9aa2b1; }
+    input[data-glass]::placeholder { color: rgba(255,255,255,0.45); }
+
+    /* ── Layout ────────────────────────────────────────────────────── */
+    .layout {
+      min-height: 100vh;
+      padding: 16px;
+      display: grid;
+      grid-template-columns: 176px 1fr;
+      gap: 16px;
+    }
+
+    /* ── Sidebar ───────────────────────────────────────────────────── */
+    .sidebar {
+      align-self: start;
+      position: sticky;
+      top: 16px;
+      height: calc(100vh - 32px);
+      display: flex;
+      flex-direction: column;
+      padding: 20px 14px 18px;
+      border-radius: 22px;
+      background: rgba(8,18,52,0.55);
+      backdrop-filter: blur(26px) saturate(160%);
+      border: 1px solid rgba(255,255,255,0.12);
+      box-shadow: 0 18px 40px rgba(3,10,35,0.35);
+    }
+
+    .sidebar-header { padding: 0 8px 16px; }
+
+    .sidebar-label {
+      font-size: 10.5px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: rgba(233,237,247,0.42);
+    }
+
+    .sidebar-title {
+      font-size: 13px;
+      font-weight: 700;
+      color: #fff;
+      margin-top: 8px;
+      line-height: 1.3;
+    }
+
+    .sidebar-sub {
+      font-size: 12px;
+      color: rgba(233,237,247,0.62);
+      margin-top: 2px;
+      line-height: 1.3;
+    }
+
+    nav { display: flex; flex-direction: column; gap: 3px; }
+
+    .nav-btn {
+      position: relative;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      width: 100%;
+      padding: 10px 11px;
+      border-radius: 11px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 600;
+      text-align: left;
+      border: 0;
+      background: transparent;
+      color: rgba(233,237,247,0.72);
+      transition: background 0.14s;
+    }
+    .nav-btn:hover { background: rgba(255,255,255,0.08); }
+    .nav-btn.active {
+      background: rgba(111,157,255,0.18);
+      color: #fff;
+      box-shadow: inset 2px 0 0 #6f9dff;
+    }
+    .nav-icon { display: flex; align-items: center; color: rgba(233,237,247,0.6); }
+    .nav-btn.active .nav-icon { color: #6f9dff; }
+
+    .sidebar-footer {
+      margin-top: auto;
+      display: flex;
+      align-items: center;
+      gap: 11px;
+      padding: 0 4px;
+    }
+
+    .n33-badge {
+      width: 42px;
+      height: 42px;
+      border-radius: 12px;
+      background: linear-gradient(160deg, #4d81ff, #1741b8);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.4), 0 8px 18px rgba(23,65,184,0.45);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+      font-weight: 800;
+      color: #fff;
+      letter-spacing: 0.02em;
+      flex-shrink: 0;
+    }
+
+    .online-dot {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      font-size: 12px;
+      color: rgba(233,237,247,0.72);
+    }
+
+    /* ── Contenido ─────────────────────────────────────────────────── */
+    .content { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+
+    /* ── Topbar ────────────────────────────────────────────────────── */
+    .topbar { display: flex; align-items: center; gap: 14px; }
+
+    .search-wrap { position: relative; flex: 0 1 320px; }
+
+    .search-input {
+      width: 100%;
+      height: 44px;
+      padding: 0 14px 0 40px;
+      border-radius: 12px;
+      border: 1px solid rgba(255,255,255,0.16);
+      background: rgba(255,255,255,0.10);
+      backdrop-filter: blur(18px);
+      color: #fff;
+      font-size: 13.5px;
+    }
+
+    .search-icon {
+      position: absolute;
+      left: 14px;
+      top: 13px;
+      color: #6f9dff;
+      display: flex;
+      pointer-events: none;
+    }
+
+    .spacer { flex: 1; }
+
+    .datetime-pill {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      height: 44px;
+      padding: 0 16px;
+      border-radius: 12px;
+      border: 1px solid rgba(255,255,255,0.16);
+      background: rgba(255,255,255,0.10);
+      backdrop-filter: blur(18px);
+      font-size: 13px;
+      font-weight: 600;
+      color: #fff;
+    }
+
+    .pill-sep { width: 1px; height: 18px; background: rgba(255,255,255,0.18); }
+
+    .dt-item { display: flex; align-items: center; gap: 8px; }
+    .dt-item svg { color: #6f9dff; }
+    .dt-val { font-family: "JetBrains Mono", monospace; font-size: 12.5px; font-variant-numeric: tabular-nums; }
+
+    .user-pill {
+      display: flex;
+      align-items: center;
+      gap: 11px;
+      height: 44px;
+      padding: 0 16px 0 3px;
+      border-radius: 12px;
+      border: 1px solid rgba(255,255,255,0.16);
+      background: rgba(255,255,255,0.10);
+      backdrop-filter: blur(18px);
+    }
+
+    .user-avatar {
+      width: 38px;
+      height: 38px;
+      border-radius: 10px;
+      background: rgba(255,255,255,0.12);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #cfdcff;
+      margin-left: 3px;
+      flex-shrink: 0;
+    }
+
+    /* ── Tarjeta principal ─────────────────────────────────────────── */
+    .main-card {
+      flex: 1;
+      background: #f7f8fb;
+      border-radius: 24px;
+      box-shadow: 0 30px 70px rgba(4,12,45,0.42);
+      color: #111827;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .card-header {
+      background: #fff;
+      border-bottom: 1px solid #eaedf4;
+      padding: 20px 24px;
+      flex-shrink: 0;
+    }
+
+    .card-title { font-size: 22px; font-weight: 800; letter-spacing: -0.6px; }
+    .card-sub { margin-top: 4px; font-size: 13px; color: #6b7280; }
+
+    /* ── Vistas ────────────────────────────────────────────────────── */
+    .vista { padding: 20px 24px 26px; display: flex; flex-direction: column; gap: 18px; }
+    .hidden { display: none !important; }
+
+    /* ── Sección blanca ────────────────────────────────────────────── */
+    .sec {
+      background: #fff;
+      border: 1px solid #eceff5;
+      border-radius: 18px;
+      box-shadow: 0 1px 2px rgba(17,24,39,0.05), 0 10px 26px rgba(17,24,39,0.05);
+    }
+
+    /* ── Grid helpers ──────────────────────────────────────────────── */
+    .g3 { display: grid; grid-template-columns: 1.3fr 0.8fr 1fr; gap: 18px; }
+    .g2 { display: grid; grid-template-columns: 1.55fr 1fr; gap: 18px; align-items: start; }
+    .g2-conf { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; align-items: start; }
+
+    /* ── Tipo badge ────────────────────────────────────────────────── */
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 5px 11px;
+      border-radius: 20px;
+      font-size: 11.5px;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+    .badge .bd { width: 7px; height: 7px; border-radius: 50%; }
+
+    .b-blue  { background: rgba(47,109,240,0.12); border: 1px solid rgba(47,109,240,0.22); color: #1d4ed8; }
+    .b-blue  .bd { background: #1d4ed8; }
+    .b-green { background: rgba(16,163,106,0.12); border: 1px solid rgba(16,163,106,0.22); color: #0f7a4f; }
+    .b-green .bd { background: #0f7a4f; }
+    .b-amber { background: rgba(217,153,20,0.12); border: 1px solid rgba(217,153,20,0.22); color: #92600b; }
+    .b-amber .bd { background: #92600b; }
+    .b-gray  { background: rgba(75,85,99,0.10); border: 1px solid rgba(75,85,99,0.20); color: #4b5563; }
+    .b-gray  .bd { background: #4b5563; }
+
+    /* ── Botones ───────────────────────────────────────────────────── */
+    .btn-prim {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 9px;
+      height: 44px;
+      padding: 0 20px;
+      border-radius: 12px;
+      border: 0;
+      background: linear-gradient(135deg, #4d81ff, #1741b8);
+      color: #fff;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 10px 22px rgba(23,65,184,0.3);
+      transition: transform 0.14s, box-shadow 0.14s;
+      width: 100%;
+    }
+    .btn-prim:hover { transform: translateY(-1px); }
+    .btn-prim:disabled { background: #9db7ee; box-shadow: none; cursor: default; }
+
+    .btn-sec {
+      height: 44px;
+      padding: 0 20px;
+      border-radius: 12px;
+      border: 1px solid #dbe1ec;
+      background: #fff;
+      color: #111827;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      width: 100%;
+      transition: background 0.14s;
+    }
+    .btn-sec:hover { background: #f3f6fc; }
+
+    .btn-icon {
+      width: 34px;
+      height: 34px;
+      border-radius: 11px;
+      border: 1px solid #e6eaf2;
+      background: #fff;
+      color: #6b7280;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      flex-shrink: 0;
+      transition: background 0.14s;
+    }
+    .btn-icon:hover { background: #f3f6fc; }
+
+    /* ── Inputs ────────────────────────────────────────────────────── */
+    .inp {
+      width: 100%;
+      height: 42px;
+      padding: 0 13px;
+      border-radius: 11px;
+      border: 1px solid #e0e5ef;
+      background: #fbfcfe;
+      font-size: 13px;
+      color: #111827;
+    }
+    .inp-pill { border-radius: 22px !important; }
+    .inp-mono { font-family: "JetBrains Mono", monospace; font-size: 12.5px !important; }
+
+    /* ── Tabla ─────────────────────────────────────────────────────── */
+    table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+    thead th {
+      padding: 11px 12px;
+      font-size: 10.5px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.16em;
+      color: #9aa2b1;
+      border-bottom: 1px solid #eef1f6;
+      text-align: left;
+    }
+    thead th:first-child { padding-left: 0; }
+    thead th:last-child  { padding-right: 0; }
+    tbody tr:hover td { background: #fafbfd; }
+    tbody td { padding: 11px 12px; border-bottom: 1px solid #f1f3f8; }
+    tbody td:first-child { padding-left: 0; }
+    tbody td:last-child  { padding-right: 0; }
+    .t-num  { font-family: "JetBrains Mono", monospace; font-weight: 700; font-variant-numeric: tabular-nums; }
+    .t-date { font-family: "JetBrains Mono", monospace; font-size: 12.5px; color: #4b5563; font-variant-numeric: tabular-nums; }
+    .t-pts  { color: #4b5563; }
+
+    /* ── Label uppercase ───────────────────────────────────────────── */
+    .lbl {
+      font-size: 10.5px;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: #9aa2b1;
+    }
+
+    /* ── Mono display ──────────────────────────────────────────────── */
+    .mono { font-family: "JetBrains Mono", monospace; font-variant-numeric: tabular-nums; }
+
+    /* ── Firma: auto control ───────────────────────────────────────── */
+    .auto-row { padding: 18px 20px; display: flex; align-items: center; gap: 18px; }
+    .auto-counters { display: flex; gap: 26px; text-align: center; flex-shrink: 0; }
+    .ctr-val { font-family: "JetBrains Mono", monospace; font-size: 24px; font-weight: 700; line-height: 1; font-variant-numeric: tabular-nums; }
+    .ctr-lbl { font-size: 11.5px; color: #6b7280; margin-top: 6px; }
+
+    /* ── Firma: PDF list ───────────────────────────────────────────── */
+    .pdf-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 13px;
+      border-radius: 14px;
+      cursor: pointer;
+      border: 1px solid #eef1f6;
+      background: #fbfcfe;
+      transition: border-color 0.14s, background 0.14s;
+    }
+    .pdf-item.sel { border-color: rgba(47,109,240,0.35); background: rgba(47,109,240,0.06); }
+    .pdf-item:hover { border-color: #cdd8ec; }
+
+    .pdf-ic {
+      width: 34px;
+      height: 34px;
+      border-radius: 10px;
+      background: rgba(47,109,240,0.10);
+      color: #2f6df0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .pdf-name { display: block; font-size: 12.5px; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .pdf-meta { display: block; font-family: "JetBrains Mono", monospace; font-size: 10.5px; color: #8b93a5; }
+
+    /* ── Firma: preview ────────────────────────────────────────────── */
+    .preview-card {
+      height: calc(100vh - 230px);
+      min-height: 420px;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    .preview-empty {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 40px 20px;
+      font-size: 13.5px;
+      color: #9aa2b1;
+      text-align: center;
+    }
+    .preview-full { display: flex; flex-direction: column; height: 100%; }
+    .preview-toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 16px 20px;
+      border-bottom: 1px solid #eef1f6;
+    }
+    .page-viewer {
+      flex: 1;
+      overflow-y: auto;
+      background: #e8ebf2;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 18px;
+      padding: 20px 16px;
+      min-height: 0;
+    }
+    .page-viewer .pag-wrap {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+    }
+    .page-viewer .pag-wrap img {
+      max-width: 100%;
+      border-radius: 4px;
+      box-shadow: 0 3px 14px rgba(0,0,0,0.18);
+      display: block;
+    }
+    .page-viewer .pag-lbl {
+      font-family: "JetBrains Mono", monospace;
+      font-size: 10.5px;
+      color: #9aa2b1;
+    }
+    .page-viewer-msg {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      height: 100%;
+      font-size: 13px;
+      color: #9aa2b1;
+    }
+
+    /* ── Modal ─────────────────────────────────────────────────────── */
+    .modal-overlay {
+      position: fixed; inset: 0;
+      background: rgba(5,11,40,0.45);
+      backdrop-filter: blur(3px);
+      display: flex; align-items: center; justify-content: center;
+      z-index: 1000;
+    }
+    .modal-overlay.hidden { display: none; }
+    .modal-box {
+      background: #fff;
+      border-radius: 20px;
+      padding: 28px 28px 24px;
+      width: 440px;
+      max-width: calc(100vw - 40px);
+      box-shadow: 0 20px 60px rgba(5,11,40,0.25);
+      display: flex; flex-direction: column; gap: 14px;
+    }
+    .modal-title {
+      font-size: 15px; font-weight: 700; color: #1a2340; margin-bottom: 2px;
+    }
+    .modal-box .lbl { margin-top: 4px; }
+
+    /* ── Barra de distribución ─────────────────────────────────────── */
+    .bar-track { height: 10px; border-radius: 6px; background: #eef1f6; overflow: hidden; }
+    .bar-fill  { height: 100%; border-radius: 6px; background: linear-gradient(90deg, #6f9dff, #1741b8); }
+
+    /* ── Estado row ────────────────────────────────────────────────── */
+    .estado-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 14px;
+      border: 1px solid #eef1f6;
+      border-radius: 14px;
+      background: #fbfcfe;
+    }
+    .estado-val { font-family: "JetBrains Mono", monospace; font-size: 15px; font-weight: 700; font-variant-numeric: tabular-nums; }
+
+    /* ── Stats grid ────────────────────────────────────────────────── */
+    .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
+    .stat-card { padding: 20px; }
+    .stat-ic { width: 40px; height: 40px; border-radius: 11px; background: rgba(47,109,240,0.10); color: #2f6df0; display: flex; align-items: center; justify-content: center; }
+    .stat-val { font-family: "JetBrains Mono", monospace; font-size: 30px; font-weight: 700; letter-spacing: -1px; margin-top: 16px; line-height: 1; }
+    .stat-lbl { font-size: 13px; font-weight: 700; margin-top: 9px; }
+    .stat-note { font-size: 12px; color: #6b7280; margin-top: 2px; }
+
+    /* ── Separador section-header ──────────────────────────────────── */
+    .sec-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      margin-bottom: 14px;
+    }
+    .sec-head h2 { font-size: 15px; font-weight: 800; letter-spacing: -0.4px; }
+    .sec-head .sub { font-size: 12px; color: #6b7280; margin-top: 3px; }
+
+    /* ── Preferencias ──────────────────────────────────────────────── */
+    .pref-row { display: flex; align-items: center; gap: 12px; padding: 14px 0; border-bottom: 1px solid #f1f3f8; }
+    .pref-row:last-child { border-bottom: none; }
+
+    /* ── Aviso ─────────────────────────────────────────────────────── */
+    .aviso {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background: #1f2937;
+      color: #e9edf7;
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 14px;
+      padding: 12px 18px;
+      font-size: 13.5px;
+      font-weight: 600;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+      z-index: 9999;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      animation: slideIn 0.2s ease;
+    }
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .aviso.ok { border-color: rgba(16,163,106,0.4); }
+    .aviso.err { border-color: rgba(239,68,68,0.4); }
+    .aviso-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+    .aviso.ok  .aviso-dot { background: #10a36a; }
+    .aviso.err .aviso-dot { background: #ef4444; }
+    .aviso-none { background: #374151; }
+    .aviso-none .aviso-dot { background: #9aa2b1; }
+  </style>
+</head>
+<body>
+<div class="layout">
+
+  <!-- ═══════════════════════════ SIDEBAR ═══════════════════════════ -->
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <div class="sidebar-label">Prendas Autofin</div>
+      <div class="sidebar-title">33ª Notaría de Santiago</div>
+      <div class="sidebar-sub">Carolina Piña Cuevas</div>
+    </div>
+
+    <nav>
+      <button class="nav-btn active" onclick="irVista(this,'repertorios')">
+        <span class="nav-icon">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M4 4h11a3 3 0 0 1 3 3v13H7a3 3 0 0 1-3-3zM18 20a2 2 0 0 0 2-2V6"/>
+          </svg>
+        </span>
+        <span>Toma de Repertorios</span>
+      </button>
+      <button class="nav-btn" onclick="irVista(this,'firma')">
+        <span class="nav-icon">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M4 20h16M6 16l9.5-9.5a2.1 2.1 0 0 0-3-3L3 13v3h3z"/>
+          </svg>
+        </span>
+        <span>Firma Electrónica</span>
+      </button>
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="n33-badge">N°33</div>
+      <div class="online-dot">
+        <span style="width:7px;height:7px;border-radius:50%;background:#6f9dff;box-shadow:0 0 0 4px rgba(111,157,255,0.22);flex-shrink:0"></span>
+        Conectado
+      </div>
+    </div>
+  </aside>
+
+  <!-- ══════════════════════════ CONTENIDO ══════════════════════════ -->
+  <div class="content">
+
+    <!-- TOPBAR -->
+    <header class="topbar">
+      <div class="search-wrap">
+        <input data-glass class="search-input" id="buscador" type="search"
+               placeholder="Ingrese N° de repertorio" oninput="onBuscar(this.value)">
+        <span class="search-icon">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M11 19a8 8 0 1 0 0-16 8 8 0 0 0 0 16zM21 21l-4.3-4.3"/>
+          </svg>
+        </span>
+      </div>
+      <div class="spacer"></div>
+      <div class="datetime-pill">
+        <span class="dt-item">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M4 6h16v15H4zM4 10h16M8 3v4M16 3v4"/>
+          </svg>
+          <span class="dt-val" id="relojFecha">—</span>
+        </span>
+        <div class="pill-sep"></div>
+        <span class="dt-item">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18zM12 7v5l3 2"/>
+          </svg>
+          <span class="dt-val" id="relojHora">—</span>
+        </span>
+      </div>
+      <div class="user-pill">
+        <span class="user-avatar">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM4 21a8 8 0 0 1 16 0"/>
+          </svg>
+        </span>
+        <span style="line-height:1.25">
+          <span style="display:block;font-size:13.5px;font-weight:700;color:rgba(255,255,255,0.55)">—</span>
+          <span style="display:block;font-size:11.5px;color:rgba(255,255,255,0.4)">Sin usuario</span>
+        </span>
+      </div>
+    </header>
+
+    <!-- TARJETA PRINCIPAL -->
+    <main class="main-card">
+      <div class="card-header">
+        <h1 class="card-title" id="vistaTitle">Repertorios</h1>
+        <div class="card-sub" id="vistaSub">Lectura de Excel y generación de la planilla consolidada</div>
+      </div>
+
+      <!-- ═══════════ VISTA: REPERTORIOS ═══════════ -->
+      <div id="v-repertorios" class="vista">
+
+        <!-- Fila superior: 3 tarjetas -->
+        <div class="g3">
+          <div class="sec" style="padding:20px">
+            <div class="lbl">Planilla de origen</div>
+            <div class="mono" id="excelNombre"
+                 style="font-size:14px;font-weight:700;margin-top:10px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">
+              Sin archivo cargado
+            </div>
+            <div id="excelMeta" style="font-size:12px;color:#6b7280;margin-top:4px">—</div>
+          </div>
+
+          <div class="sec" style="padding:20px">
+            <div class="lbl">Clientes encontrados</div>
+            <div class="mono" id="excelFilas"
+                 style="font-size:30px;font-weight:700;letter-spacing:-1px;margin-top:8px;line-height:1">
+              —
+            </div>
+          </div>
+
+          <div class="sec" style="padding:20px;display:flex;flex-direction:column;gap:10px;justify-content:center">
+            <button class="btn-prim" onclick="generarPlanilla()" id="btnGenerar" disabled>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 3v12M8 11l4 4 4-4M3 18h18"/>
+              </svg>
+              Generar planilla
+            </button>
+            <button class="btn-sec" onclick="cargarExcel()">Cargar Excel</button>
+          </div>
+        </div>
+
+        <!-- Aviso filas ignoradas -->
+        <div id="avisosFilas" class="hidden"
+             style="background:rgba(217,153,20,0.08);border:1px solid rgba(217,153,20,0.28);border-radius:14px;padding:14px 18px;font-size:13px;color:#92600b">
+          <strong>Filas ignoradas:</strong> <span id="avisosTexto"></span>
+        </div>
+
+        <!-- Tabla -->
+        <div class="sec" style="padding:20px">
+          <div class="sec-head">
+            <div>
+              <h2>Repertorio del día</h2>
+              <div class="sub" id="linResultado">0 de 0 registros</div>
+            </div>
+            <button onclick="exportarTabla()"
+                    style="height:40px;padding:0 16px;border-radius:12px;border:1px solid #dbe1ec;background:#fff;color:#111827;font-size:13.5px;font-weight:700;cursor:pointer;white-space:nowrap;transition:background 0.14s"
+                    onmouseover="this.style.background='#f3f6fc'" onmouseout="this.style.background='#fff'">
+              Exportar
+            </button>
+          </div>
+          <div style="overflow-x:auto">
+            <table>
+              <thead>
+                <tr>
+                  <th style="padding-left:0">N°</th>
+                  <th>Nombre</th>
+                  <th>RUT</th>
+                </tr>
+              </thead>
+              <tbody id="tablaBody"></tbody>
+            </table>
+          </div>
+          <div id="tablaVacia" class="hidden"
+               style="padding:32px;text-align:center;font-size:13.5px;color:#9aa2b1">
+            Sin resultados para la búsqueda actual
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══════════ VISTA: FIRMA ELECTRÓNICA ═══════════ -->
+      <div id="v-firma" class="vista hidden">
+
+        <!-- Control automático -->
+        <div class="sec auto-row">
+          <div style="flex:1;min-width:0">
+            <div class="lbl">Modo automático</div>
+            <div style="display:flex;align-items:center;gap:12px;margin-top:12px">
+              <button id="autoBtn" onclick="toggleAuto()"
+                      style="display:inline-flex;align-items:center;gap:9px;height:44px;padding:0 20px;border-radius:22px;border:0;cursor:pointer;font-size:14px;font-weight:700;color:#fff;background:linear-gradient(135deg,#4d81ff,#1741b8);box-shadow:0 10px 22px rgba(23,65,184,0.3);transition:transform 0.14s,box-shadow 0.14s">
+                <svg id="autoIco" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+                  <path id="autoIcoPath" d="M7 4l12 8-12 8z"/>
+                </svg>
+                <span id="autoLabel">Iniciar modo automático</span>
+              </button>
+              <span id="autoBadge" class="badge b-gray"><span class="bd"></span><span id="autoEstado">Detenido</span></span>
+            </div>
+          </div>
+          <div class="auto-counters">
+            <div>
+              <div class="ctr-val" style="color:#0f7a4f" id="ctSubidos">0</div>
+              <div class="ctr-lbl">Subidos hoy</div>
+            </div>
+            <div>
+              <div class="ctr-val" style="color:#c0392b" id="ctErrores">0</div>
+              <div class="ctr-lbl">Errores hoy</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Preview + panel derecho -->
+        <div class="g2">
+          <!-- Preview PDF -->
+          <div class="sec preview-card">
+            <div id="prevVacio" class="preview-empty">
+              Selecciona un PDF de la lista para ver las páginas
+            </div>
+            <div id="prevLleno" class="preview-full hidden">
+              <div class="preview-toolbar">
+                <div style="min-width:0">
+                  <div class="mono" id="prevNombre"
+                       style="font-size:12.5px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">—</div>
+                  <div id="prevMeta" style="font-size:11.5px;color:#6b7280;margin-top:3px">—</div>
+                </div>
+                <span id="prevBadge" class="badge b-green"><span class="bd"></span><span id="prevEstado">Leído</span></span>
+              </div>
+              <div class="page-viewer" id="pageViewer">
+                <div class="page-viewer-msg">Selecciona un PDF de la lista</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Panel derecho -->
+          <div style="display:flex;flex-direction:column;gap:18px">
+            <!-- Formulario repertorio -->
+            <div class="sec" style="padding:20px;display:flex;flex-direction:column;gap:14px">
+              <div class="lbl">Repertorio</div>
+              <div style="display:grid;grid-template-columns:1fr 84px;gap:8px;align-items:center">
+                <input class="inp inp-pill inp-mono" id="repNum" placeholder="N° repertorio"
+                       oninput="onRepNumInput(this.value)">
+                <input class="inp inp-pill inp-mono" id="repAnio" value="2026" style="text-align:center">
+              </div>
+              <div class="lbl">Fecha de la escritura</div>
+              <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">
+                <input class="inp inp-pill inp-mono" id="fDia"  placeholder="Día"  style="text-align:center">
+                <input class="inp inp-pill inp-mono" id="fMes"  placeholder="Mes"  style="text-align:center">
+                <input class="inp inp-pill inp-mono" id="fAnio" placeholder="Año"  style="text-align:center">
+              </div>
+              <div class="lbl" style="margin-top:2px">Tipo de contrato / materia</div>
+              <input class="inp" style="border-radius:11px" id="materiaInp"
+                     placeholder="Ej: ALZAMIENTO DE PRENDA Y PROHIBICION">
+              <button id="btnIngresar" class="btn-prim" style="height:48px;border-radius:24px"
+                      onclick="ingresarCopia()" disabled>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M21 3 3 10.5l7 3 3 7z"/>
+                </svg>
+                Ingresar copia de escritura
+              </button>
+            </div>
+
+            <!-- Botón agregar escritura manual -->
+            <button class="btn-prim" style="height:42px;border-radius:21px;font-size:13px"
+                    onclick="abrirModalAgregarCaso()">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+              </svg>
+              Agregar escritura a base de datos
+            </button>
+
+            <!-- Lista PDFs -->
+            <div class="sec" style="padding:20px;display:flex;flex-direction:column;gap:14px">
+              <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px">
+                <div style="min-width:0">
+                  <div class="lbl">Documentos disponibles</div>
+                  <div id="carpetaLabel" class="mono"
+                       style="font-size:11px;color:#9aa2b1;margin-top:5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">
+                    \\Desktop-14rq1mp\escaner riho 550
+                  </div>
+                </div>
+                <div style="display:flex;gap:6px;flex-shrink:0">
+                  <button class="btn-icon" onclick="refrescarPDFs()" title="Refrescar">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M21 12a9 9 0 1 1-3-6.7M21 4v5h-5"/>
+                    </svg>
+                  </button>
+                  <button class="btn-icon" onclick="seleccionarCarpetaEscaner()" title="Seleccionar carpeta">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M3 6h6l2 2h10v11H3z"/>
+                    </svg>
+                  </button>
+                </div>
+              </div>
+              <div id="listaPDFs" style="display:flex;flex-direction:column;gap:8px"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </main>
+  </div>
+</div>
+
+<!-- Modal: agregar escritura manualmente -->
+<div id="modalAgregar" class="modal-overlay hidden" onclick="if(event.target===this)cerrarModalAgregarCaso()">
+  <div class="modal-box">
+    <div class="modal-title">Agregar escritura a base de datos</div>
+
+    <div style="display:grid;grid-template-columns:1fr 88px;gap:8px;align-items:center">
+      <div>
+        <div class="lbl">N° Repertorio</div>
+        <input class="inp inp-pill inp-mono" id="mRepNum" placeholder="Ej: 9739" style="margin-top:6px">
+      </div>
+      <div>
+        <div class="lbl">Año</div>
+        <input class="inp inp-pill inp-mono" id="mRepAnio" value="2026" style="margin-top:6px;text-align:center">
+      </div>
+    </div>
+
+    <div>
+      <div class="lbl">Tipo de contrato / materia</div>
+      <input class="inp" style="border-radius:11px;margin-top:6px" id="mMateria"
+             placeholder="Ej: ALZAMIENTO DE PRENDA Y PROHIBICION">
+    </div>
+
+    <div>
+      <div class="lbl">Fecha de la escritura</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:6px">
+        <input class="inp inp-pill inp-mono" id="mDia"  placeholder="Día"  style="text-align:center">
+        <input class="inp inp-pill inp-mono" id="mMes"  placeholder="Mes"  style="text-align:center">
+        <input class="inp inp-pill inp-mono" id="mAnio" placeholder="Año"  style="text-align:center">
+      </div>
+    </div>
+
+    <div style="display:flex;gap:10px;margin-top:4px">
+      <button class="btn-prim" style="flex:1;height:44px;border-radius:22px" onclick="guardarCasoManual()">
+        Guardar
+      </button>
+      <button onclick="cerrarModalAgregarCaso()"
+              style="flex:1;height:44px;border-radius:22px;border:1px solid #dde3ef;background:none;cursor:pointer;font-size:14px;color:#374268">
+        Cancelar
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Notificación toast -->
+<div id="toast" class="aviso hidden"></div>
+
+<script>
+// ═══════════════════════════════════════════════════════════════════
+// Estado global
+// ═══════════════════════════════════════════════════════════════════
+const estado = {
+  vista: 'repertorios',
+  busqueda: '',
+  auto: false,
+  pdfSel: -1,
+  subidos: 0,
+  errores: 0,
+  registros: [],  // filas cargadas del Excel
+  ignoradas: [],  // filas con aviso
+};
+
+
+// ═══════════════════════════════════════════════════════════════════
+// Reloj en vivo
+// ═══════════════════════════════════════════════════════════════════
+function tickReloj() {
+  const ahora = new Date();
+  const d = [
+    String(ahora.getDate()).padStart(2,'0'),
+    String(ahora.getMonth()+1).padStart(2,'0'),
+    ahora.getFullYear()
+  ].join('-');
+  const h = String(ahora.getHours()).padStart(2,'0') + ':' + String(ahora.getMinutes()).padStart(2,'0');
+  document.getElementById('relojFecha').textContent = d;
+  document.getElementById('relojHora').textContent  = h;
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// Navegación
+// ═══════════════════════════════════════════════════════════════════
+const META_VISTAS = {
+  repertorios: { titulo: 'Repertorios',        sub: 'Lectura de Excel y generación de la planilla consolidada' },
+  firma:       { titulo: 'Firma Electrónica',  sub: 'Lectura de PDF y llenado del formulario de firma' },
+};
+
+function irVista(btn, vista) {
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  document.querySelectorAll('[id^="v-"]').forEach(v => v.classList.add('hidden'));
+  document.getElementById('v-' + vista).classList.remove('hidden');
+  estado.vista = vista;
+  document.getElementById('vistaTitle').textContent = META_VISTAS[vista].titulo;
+  document.getElementById('vistaSub').textContent   = META_VISTAS[vista].sub;
+
+  // Al entrar a Firma: cargar lista y activar polling
+  if (vista === 'firma') {
+    cargarListaPDFs();
+    iniciarPollingAuto();
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// Búsqueda
+// ═══════════════════════════════════════════════════════════════════
+function onBuscar(q) {
+  estado.busqueda = q.trim().toLowerCase();
+  renderTabla();
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// Tabla de repertorios
+// ═══════════════════════════════════════════════════════════════════
+function renderTabla() {
+  const origen = estado.registros;
+  const q = estado.busqueda;
+  const filas = q
+    ? origen.filter(r => (r.n + ' ' + r.nombre + ' ' + r.rut).toLowerCase().includes(q))
+    : origen;
+
+  const cuerpo  = document.getElementById('tablaBody');
+  const vacio   = document.getElementById('tablaVacia');
+
+  if (!filas.length) {
+    cuerpo.innerHTML = '';
+    vacio.classList.remove('hidden');
+  } else {
+    vacio.classList.add('hidden');
+    cuerpo.innerHTML = filas.map(r => `
+      <tr>
+        <td class="t-num" style="padding-left:0">${r.n}</td>
+        <td>${r.nombre}</td>
+        <td class="t-date">${r.rut}</td>
+      </tr>`).join('');
+  }
+
+  document.getElementById('linResultado').textContent =
+    `${filas.length} de ${origen.length} registros`;
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// Detección de entorno: pywebview o browser standalone
+// ═══════════════════════════════════════════════════════════════════
+function tieneBackend() {
+  return typeof window.pywebview !== 'undefined' && window.pywebview.api;
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// Cargar Excel — llama al backend Python via pywebview
+// ═══════════════════════════════════════════════════════════════════
+async function cargarExcel() {
+  if (!tieneBackend()) {
+    mostrarToast('Sin backend — ejecuta python dev.py', 'err');
+    return;
+  }
+  mostrarToast('Selecciona los archivos Excel…', 'none');
+  const sel = await window.pywebview.api.abrir_excel();
+  if (!sel.ok || !sel.rutas.length) return;
+
+  mostrarToast(`Leyendo ${sel.rutas.length} archivo(s)…`, 'none');
+  const res = await window.pywebview.api.cargar_excel(sel.rutas);
+  if (!res.ok) return;
+}
+
+async function generarPlanilla() {
+  if (!tieneBackend()) {
+    mostrarToast('Sin backend — ejecuta python dev.py', 'err');
+    return;
+  }
+  mostrarToast('Generando…', 'none');
+  await window.pywebview.api.generar_planilla();
+}
+
+function exportarTabla() {
+  const origen = estado.registros;
+  if (!origen.length) return mostrarToast('No hay datos para exportar', 'err');
+
+  const encabezado = ['N°','Nombre','RUT','Tipo','Estado'];
+  const filas = origen.map(r => [r.n, r.nombre, r.rut].join('\t'));
+  const tsv = [encabezado.join('\t'), ...filas].join('\n');
+
+  const blob = new Blob(['\ufeff' + tsv], { type: 'text/tab-separated-values;charset=utf-8' });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href = url;
+  a.download = `repertorio_${new Date().toISOString().slice(0,10)}.tsv`;
+  a.click();
+  URL.revokeObjectURL(url);
+  mostrarToast('Archivo exportado', 'ok');
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// Estado Firma Electrónica
+// ═══════════════════════════════════════════════════════════════════
+const firma = {
+  archivos: [],      // lista de PDFs de la carpeta
+  selIdx: -1,        // índice seleccionado
+  selNombre: null,   // nombre del PDF seleccionado
+  datosOcr: null,    // último resultado OCR
+  carpeta: '—',
+};
+
+// Refresco automático del estado auto cada 5s cuando la vista está activa
+let _autoTimer = null;
+
+function iniciarPollingAuto() {
+  if (_autoTimer) return;
+  _autoTimer = setInterval(async () => {
+    if (estado.vista !== 'firma' || !tieneBackend()) return;
+    const s = await window.pywebview.api.firma_estado_auto();
+    actualizarContadores(s.subidos, s.errores);
+  }, 5000);
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// Lista de PDFs
+// ═══════════════════════════════════════════════════════════════════
+async function cargarListaPDFs() {
+  if (!tieneBackend()) { return; }
+  const res = await window.pywebview.api.firma_listar_pdfs();
+  if (!res.ok) return;
+  firma.archivos = res.archivos;
+  firma.carpeta  = res.carpeta;
+  document.getElementById('carpetaLabel').textContent = res.carpeta;
+  renderPDFs();
+}
+
+function renderPDFs() {
+  const lista = document.getElementById('listaPDFs');
+  if (!firma.archivos.length) {
+    lista.innerHTML = '<div style="padding:14px;font-size:13px;color:#9aa2b1;text-align:center">Sin PDFs en la carpeta</div>';
+    return;
+  }
+  lista.innerHTML = firma.archivos.map((f, i) => {
+    const sel   = firma.selIdx === i;
+    const clase = f.ya_enviado ? 'b-green' : 'b-gray';
+    const est   = f.ya_enviado ? 'Enviado' : 'En cola';
+    return `
+    <div class="pdf-item${sel ? ' sel' : ''}" onclick="selPDF(${i})">
+      <span class="pdf-ic">${icoFile(17)}</span>
+      <span style="flex:1;min-width:0">
+        <span class="pdf-name">${f.nombre}</span>
+        <span class="pdf-meta">${f.ruta || ''}</span>
+      </span>
+      <span class="badge ${clase}"><span class="bd"></span>${est}</span>
+    </div>`;
+  }).join('');
+}
+
+function selPDF(idx) {
+  firma.selIdx    = idx;
+  firma.selNombre = firma.archivos[idx]?.nombre;
+  renderPDFs();
+
+  // Mostrar panel de preview
+  document.getElementById('prevVacio').classList.add('hidden');
+  document.getElementById('prevLleno').classList.remove('hidden');
+  document.getElementById('prevNombre').textContent = firma.selNombre;
+  document.getElementById('prevMeta').textContent   = 'Completa el formulario y presiona Ingresar';
+
+  // Limpiar formulario para llenado manual
+  _limpiarFormFirma();
+
+  if (!tieneBackend()) {
+    mostrarToast('Sin backend — ejecuta python dev.py', 'err');
+    return;
+  }
+
+  // Renderizar páginas inmediatamente (sin OCR)
+  document.getElementById('pageViewer').innerHTML =
+    '<div class="page-viewer-msg">Cargando páginas…</div>';
+  window.pywebview.api.firma_cargar_visor_pdf(firma.selNombre);
+}
+
+let _repBuscarTimer = null;
+function onRepNumInput(valor) {
+  document.getElementById('btnIngresar').disabled = !valor.trim();
+  clearTimeout(_repBuscarTimer);
+  if (!valor.trim() || !tieneBackend()) return;
+  _repBuscarTimer = setTimeout(() => buscarRepertorio(valor.trim()), 400);
+}
+
+async function buscarRepertorio(numero) {
+  const res = await window.pywebview.api.firma_buscar_caso(numero);
+  if (!res.ok || !res.caso) return;   // no está en BD — el usuario llena manualmente
+  _rellenarFormFirma(res.caso);
+  mostrarToast(`Repertorio ${numero} encontrado`, 'ok');
+}
+
+function _limpiarFormFirma() {
+  ['repNum','repAnio','materiaInp','fDia','fMes','fAnio'].forEach(id => {
+    document.getElementById(id).value = '';
+  });
+  document.getElementById('repAnio').value = new Date().getFullYear();
+  document.getElementById('btnIngresar').disabled = true;
+}
+
+function _rellenarFormFirma(datos) {
+  document.getElementById('repNum').value     = datos.numero        || '';
+  document.getElementById('repAnio').value    = datos.anho          || '';
+  document.getElementById('materiaInp').value = datos.tipo_contrato || '';
+  document.getElementById('fDia').value       = datos.fecha_dia     || '';
+  document.getElementById('fMes').value       = datos.fecha_mes     || '';
+  document.getElementById('fAnio').value      = datos.fecha_anio    || '';
+  document.getElementById('btnIngresar').disabled = !datos.numero;
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// Modo automático
+// ═══════════════════════════════════════════════════════════════════
+async function toggleAuto() {
+  if (!tieneBackend()) {
+    mostrarToast('Sin backend — ejecuta python dev.py', 'err');
+    return;
+  }
+  const s = await window.pywebview.api.firma_toggle_auto();
+  _aplicarEstadoAuto(s);
+}
+
+function _aplicarEstadoAuto(s) {
+  const btn   = document.getElementById('autoBtn');
+  const badge = document.getElementById('autoBadge');
+  if (s.activo) {
+    btn.style.background = 'linear-gradient(135deg,#e2564a,#a32118)';
+    btn.style.boxShadow  = '0 10px 22px rgba(163,33,24,0.28)';
+    document.getElementById('autoLabel').textContent = 'Detener modo automático';
+    document.getElementById('autoIcoPath').setAttribute('d','M9 9h2v6H9zM13 9h2v6h-2z');
+    badge.className = 'badge b-green';
+    badge.innerHTML = '<span class="bd"></span><span>En ejecución</span>';
+  } else {
+    btn.style.background = 'linear-gradient(135deg,#4d81ff,#1741b8)';
+    btn.style.boxShadow  = '0 10px 22px rgba(23,65,184,0.3)';
+    document.getElementById('autoLabel').textContent = 'Iniciar modo automático';
+    document.getElementById('autoIcoPath').setAttribute('d','M7 4l12 8-12 8z');
+    badge.className = 'badge b-gray';
+    badge.innerHTML = '<span class="bd"></span><span>Detenido</span>';
+  }
+  actualizarContadores(s.subidos || 0, s.errores || 0);
+}
+
+function actualizarContadores(subidos, errores) {
+  document.getElementById('ctSubidos').textContent = String(subidos);
+  document.getElementById('ctErrores').textContent = String(errores);
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// Formulario firma — envío a SIGN+
+// ═══════════════════════════════════════════════════════════════════
+async function ingresarCopia() {
+  const numero   = document.getElementById('repNum').value.trim();
+  const anho     = document.getElementById('repAnio').value.trim();
+  const materia  = document.getElementById('materiaInp').value.trim();
+  const dia      = parseInt(document.getElementById('fDia').value)  || 0;
+  const mes      = parseInt(document.getElementById('fMes').value)  || 0;
+  const anioF    = parseInt(document.getElementById('fAnio').value) || 0;
+
+  if (!numero || !anho || !materia || !dia || !mes || !anioF) {
+    mostrarToast('Completa todos los campos antes de enviar', 'err');
+    return;
+  }
+  if (!firma.selNombre) {
+    mostrarToast('Selecciona un PDF de la lista primero', 'err');
+    return;
+  }
+  if (!tieneBackend()) {
+    mostrarToast('Sin backend — ejecuta python dev.py', 'err');
+    return;
+  }
+
+  document.getElementById('btnIngresar').disabled = true;
+  const res = await window.pywebview.api.firma_enviar_pdf(
+    firma.selNombre, numero, anho, materia, dia, mes, anioF
+  );
+  document.getElementById('btnIngresar').disabled = false;
+
+  if (res.estado === 'ok') {
+    // Marcar como enviado en la lista
+    if (firma.archivos[firma.selIdx]) {
+      firma.archivos[firma.selIdx].ya_enviado = true;
+      renderPDFs();
+    }
+    const s = await window.pywebview.api.firma_estado_auto();
+    actualizarContadores(s.subidos, s.errores);
+  }
+}
+
+async function refrescarPDFs() {
+  await cargarListaPDFs();
+  mostrarToast('Lista actualizada', 'ok');
+}
+
+async function abrirCarpeta() {
+  if (tieneBackend()) {
+    await window.pywebview.api.firma_abrir_carpeta_escaner();
+  } else {
+    mostrarToast('Disponible con python dev.py', 'none');
+  }
+}
+
+async function seleccionarCarpetaEscaner() {
+  if (!tieneBackend()) return mostrarToast('Sin backend', 'err');
+  const res = await window.pywebview.api.firma_seleccionar_carpeta();
+  if (res.ok) {
+    document.getElementById('carpetaLabel').textContent = res.ruta;
+    await cargarListaPDFs();
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// Toast / Notificación
+// ═══════════════════════════════════════════════════════════════════
+let _toastTimer = null;
+
+function mostrarToast(msg, tipo) {
+  const t = document.getElementById('toast');
+  const clase = tipo === 'ok' ? 'aviso ok' : tipo === 'err' ? 'aviso err' : 'aviso aviso-none';
+  t.className = clase;
+  t.innerHTML = `<span class="aviso-dot"></span>${msg}`;
+  if (_toastTimer) clearTimeout(_toastTimer);
+  _toastTimer = setTimeout(() => t.classList.add('hidden'), 3500);
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// SVG helpers
+// ═══════════════════════════════════════════════════════════════════
+function icoFile(sz) {
+  return `<svg width="${sz}" height="${sz}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8zM14 3v5h5"/></svg>`;
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// API pública para el backend Python (cuando se integre)
+// ═══════════════════════════════════════════════════════════════════
+window.JVAPI = {
+  // El backend llama esto después de leer un Excel
+  cargarDatos(nombre, filas, ignoradas) {
+    estado.registros = filas;
+    estado.ignoradas = ignoradas || [];
+    document.getElementById('excelNombre').textContent = nombre;
+    document.getElementById('excelMeta').textContent   = `${filas.length} clientes · leído ${new Date().toLocaleTimeString('es-CL',{hour:'2-digit',minute:'2-digit'})}`;
+    document.getElementById('excelFilas').textContent  = String(filas.length);
+    document.getElementById('btnGenerar').disabled = filas.length === 0;
+
+    if (ignoradas && ignoradas.length) {
+      document.getElementById('avisosTexto').textContent = ignoradas.join(', ');
+      document.getElementById('avisosFilas').classList.remove('hidden');
+    } else {
+      document.getElementById('avisosFilas').classList.add('hidden');
+    }
+    renderTabla();
+    mostrarToast(`Excel cargado: ${filas.length} clientes`, 'ok');
+  },
+
+  // El backend llama esto después de generar la planilla
+  planillaGenerada(nombreArchivo) {
+    mostrarToast(`Planilla generada: ${nombreArchivo}`, 'ok');
+  },
+
+  // El backend llama esto ante un error
+  mostrarError(msg) {
+    mostrarToast(msg, 'err');
+  },
+
+  // ── Visor PDF ────────────────────────────────────────────────────
+  iniciarVisorPDF(total) {
+    const v = document.getElementById('pageViewer');
+    v.innerHTML = `<div class="page-viewer-msg">Cargando ${total} página${total!==1?'s':''}…</div>
+                   <div id="pdfPags" style="display:contents"></div>`;
+  },
+  agregarPaginaVisor(num, total, data) {
+    // La primera página reemplaza el mensaje de carga
+    const v = document.getElementById('pageViewer');
+    if (num === 1) v.innerHTML = '<div id="pdfPags" style="display:contents"></div>';
+    const cont = document.getElementById('pdfPags');
+    const wrap = document.createElement('div');
+    wrap.className = 'pag-wrap';
+    wrap.innerHTML = `<span class="pag-lbl">Página ${num} de ${total}</span>
+                      <img src="data:image/png;base64,${data}" alt="Página ${num}">`;
+    cont.appendChild(wrap);
+  },
+  errorVisorPDF() {
+    document.getElementById('pageViewer').innerHTML =
+      '<div class="page-viewer-msg" style="color:#c0392b">Error al renderizar el PDF</div>';
+  },
+};
+
+// ═══════════════════════════════════════════════════════════════════
+// Modal: agregar escritura manualmente
+// ═══════════════════════════════════════════════════════════════════
+
+function abrirModalAgregarCaso() {
+  // Limpiar campos
+  ['mRepNum','mRepAnio','mMateria','mDia','mMes','mAnio'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el.id === 'mRepAnio') el.value = '2026';
+    else el.value = '';
+  });
+  document.getElementById('modalAgregar').classList.remove('hidden');
+  document.getElementById('mRepNum').focus();
+}
+
+function cerrarModalAgregarCaso() {
+  document.getElementById('modalAgregar').classList.add('hidden');
+}
+
+async function guardarCasoManual() {
+  if (!tieneBackend()) return mostrarToast('Sin backend', 'err');
+
+  const numero  = document.getElementById('mRepNum').value.trim();
+  const anho    = document.getElementById('mRepAnio').value.trim();
+  const materia = document.getElementById('mMateria').value.trim();
+  const dia     = document.getElementById('mDia').value.trim();
+  const mes     = document.getElementById('mMes').value.trim();
+  const anioF   = document.getElementById('mAnio').value.trim();
+
+  if (!numero || !anho || !materia || !dia || !mes || !anioF) {
+    return mostrarToast('Completa todos los campos', 'err');
+  }
+
+  const res = await window.pywebview.api.firma_agregar_caso(
+    numero, anho, materia, parseInt(dia), parseInt(mes), parseInt(anioF)
+  );
+
+  if (res.ok) {
+    mostrarToast(`Escritura ${numero}-${anho} guardada`, 'ok');
+    cerrarModalAgregarCaso();
+  } else {
+    mostrarToast(`Error: ${res.error}`, 'err');
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// Init
+// ═══════════════════════════════════════════════════════════════════
+tickReloj();
+setInterval(tickReloj, 1000);
+renderTabla();  // tabla vacía hasta que se cargue un Excel
+renderPDFs();   // lista vacía hasta que se entre a la vista Firma
+</script>
+</body>
+</html>
