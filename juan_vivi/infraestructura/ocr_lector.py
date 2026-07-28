@@ -18,11 +18,21 @@ import logging
 import re
 from pathlib import Path
 
+import os
+import sys
+
 import fitz
 import pytesseract
 from PIL import Image
 
-pytesseract.pytesseract.tesseract_cmd = r"C:\Program Files\Tesseract-OCR\tesseract.exe"
+# Ruta de Tesseract: si está empaquetado con PyInstaller usa la copia interna;
+# si no, busca la instalación estándar de Windows.
+if getattr(sys, "frozen", False):
+    _base = sys._MEIPASS
+    pytesseract.pytesseract.tesseract_cmd = os.path.join(_base, "tesseract", "tesseract.exe")
+    os.environ["TESSDATA_PREFIX"] = os.path.join(_base, "tesseract", "tessdata")
+else:
+    pytesseract.pytesseract.tesseract_cmd = r"C:\Program Files\Tesseract-OCR\tesseract.exe"
 
 logger = logging.getLogger(__name__)
 

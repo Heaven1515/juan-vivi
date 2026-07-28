@@ -11,11 +11,27 @@ import os
 import json
 import threading
 
-sys.stdout.reconfigure(encoding='utf-8', errors='replace')
-sys.stderr.reconfigure(encoding='utf-8', errors='replace')
+# Ruta raíz del proyecto (funciona tanto en desarrollo como empaquetado)
+RAIZ = os.path.dirname(os.path.abspath(sys.executable if getattr(sys, "frozen", False) else __file__))
 
-# Ruta raíz del proyecto
-RAIZ = os.path.dirname(os.path.abspath(__file__))
+# Regla 29 — cuando corre empaquetado, redirigir stdout/stderr a log
+# (PyInstaller cierra las consolas; sin esto cualquier print crashea)
+if getattr(sys, "frozen", False):
+    import logging
+    _log_path = os.path.join(RAIZ, "juan_vivi.log")
+    logging.basicConfig(
+        filename=_log_path,
+        level=logging.INFO,
+        format="%(asctime)s %(levelname)s %(name)s: %(message)s",
+        encoding="utf-8",
+    )
+    # Redirigir prints a null para no crashear
+    sys.stdout = open(os.devnull, "w", encoding="utf-8")
+    sys.stderr = open(os.devnull, "w", encoding="utf-8")
+else:
+    sys.stdout.reconfigure(encoding='utf-8', errors='replace')
+    sys.stderr.reconfigure(encoding='utf-8', errors='replace')
+
 sys.path.insert(0, RAIZ)
 
 import re
