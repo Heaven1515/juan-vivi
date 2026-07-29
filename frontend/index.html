@@ -139,7 +139,7 @@
     .content { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
 
     /* ── Topbar ────────────────────────────────────────────────────── */
-    .topbar { display: flex; align-items: center; gap: 14px; }
+    .topbar { display: flex; align-items: center; gap: 14px; position: relative; z-index: 10; }
 
     .search-wrap { position: relative; flex: 0 1 320px; }
 
@@ -988,7 +988,11 @@
 <!-- Modal: duplicados al cargar planilla -->
 <div id="modalDuplicados" class="modal-overlay hidden" onclick="if(event.target===this)cerrarModalDuplicados()">
   <div class="modal-box" style="width:680px;max-width:calc(100vw - 40px);max-height:80vh;overflow-y:auto">
-    <div class="modal-title">Repertorios duplicados detectados</div>
+    <div style="display:flex;justify-content:space-between;align-items:center">
+      <div class="modal-title" style="margin-bottom:0">Repertorios duplicados detectados</div>
+      <button onclick="cerrarModalDuplicados()"
+              style="background:none;border:none;cursor:pointer;font-size:24px;line-height:1;color:#9aa2b1;padding:0 4px">&times;</button>
+    </div>
     <div style="font-size:12.5px;color:#6b7280;margin-top:-6px">
       Estos repertorios ya existen en la base de datos. Revisa cada uno y decide si reemplazas el registro existente.
     </div>

@@ -19,8 +19,36 @@ from pathlib import Path
 
 from . import ocr_lector, signplus, vigilador
 from .base_casos import buscar_caso
+from .base_repertorios import buscar as _buscar_repertorio
 
 logger = logging.getLogger(__name__)
+
+
+def _buscar_datos(numero: str) -> dict | None:
+    """
+    Busca los datos de un repertorio para enviar a SIGN+.
+    1° intenta casos.json (entradas manuales con todos los campos).
+    2° cae en repertorios.json (planilla histórica) y convierte los campos.
+    """
+    caso = buscar_caso(numero)
+    if caso:
+        return caso
+    reg = _buscar_repertorio(numero)
+    if not reg or not reg.get("fecha"):
+        return None
+    try:
+        anio, mes, dia = reg["fecha"].split("-")
+        return {
+            "numero":        reg["repertorio"],
+            "anho":          anio,
+            "tipo_contrato": reg.get("materia", ""),
+            "fecha_dia":     int(dia),
+            "fecha_mes":     int(mes),
+            "fecha_anio":    int(anio),
+        }
+    except Exception:
+        return None
+
 
 # Ruta de carpeta del escáner (persiste en memoria de sesión)
 # Cuando exista BD, se guardará allí.
@@ -82,11 +110,11 @@ def leer_pdf(nombre: str) -> dict:
 
     # Intentar enriquecer con datos hardcodeados
     numero = datos_ocr.get("numero")
-    caso   = buscar_caso(numero) if numero else None
+    caso   = _buscar_datos(numero) if numero else None
 
     return {
         "ocr":     datos_ocr,
-        "caso":    caso,          # None si no está hardcodeado
+        "caso":    caso,
         "en_bd":   caso is not None,
     }
 
@@ -166,14 +194,14 @@ def _callback_auto(ruta_pdf: str) -> None:
             logger.warning("AUTO | OCR sin repertorio: %s", nombre)
             return
 
-        caso = buscar_caso(numero)
+        caso = _buscar_datos(numero)
         if caso is None:
             _log_sesion.append({
                 "nombre":    nombre,
                 "repertorio": f"{numero}-{anho}",
                 "tipo":      datos_ocr.get("tipo_contrato", "—"),
                 "estado":    "sin_datos",
-                "mensaje":   f"Repertorio {numero}-{anho} no está en los casos de prueba — procesar manualmente",
+                "mensaje":   f"Repertorio {numero}-{anho} no está en la base de datos — procesar manualmente",
             })
             logger.warning("AUTO | Sin datos para rep %s-%s (%s)", numero, anho, nombre)
             return

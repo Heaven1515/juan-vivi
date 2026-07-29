@@ -84,7 +84,7 @@ def detener_vigilancia() -> None:
     global _hilo
     if _hilo is not None:
         _hilo.detener()
-        _hilo.join(timeout=ESPERA_COPIA_S + 2)
+        _hilo.join(timeout=1)   # no bloquear el servidor esperando al hilo
         _hilo = None
 
 

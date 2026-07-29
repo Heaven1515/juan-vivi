@@ -237,7 +237,8 @@ def get_log():
 
 @app.get("/firma/buscar-caso/{numero}")
 def buscar_caso_ep(numero: str):
-    caso = buscar_caso(numero)
+    from juan_vivi.infraestructura.firma_controller import _buscar_datos
+    caso = _buscar_datos(numero)
     return {"ok": caso is not None, "caso": caso}
 
 

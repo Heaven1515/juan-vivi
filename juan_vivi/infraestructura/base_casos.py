@@ -21,39 +21,10 @@ def _ruta_datos() -> Path:
 
 _RUTA_JSON = _ruta_datos()
 
-# Casos de prueba iniciales (migrados desde casos_prueba.py)
-_INICIALES: dict[str, dict] = {
-    "9739": {
-        "numero":        "9739",
-        "anho":          "2026",
-        "tipo_contrato": "ALZAMIENTO DE PRENDA Y PROHIBICION",
-        "fecha_dia":     10,
-        "fecha_mes":     7,
-        "fecha_anio":    2026,
-    },
-    "9976": {
-        "numero":        "9976",
-        "anho":          "2026",
-        "tipo_contrato": "MANDATO Y CONTRATO PRIVADO DE MODIFICACION DE PRENDA LEY N 20.190",
-        "fecha_dia":     13,
-        "fecha_mes":     7,
-        "fecha_anio":    2026,
-    },
-    "10178": {
-        "numero":        "10178",
-        "anho":          "2026",
-        "tipo_contrato": "MANDATO Y CONTRATO PRIVADO DE PRENDA LEY N 20.190",
-        "fecha_dia":     15,
-        "fecha_mes":     7,
-        "fecha_anio":    2026,
-    },
-}
-
-
 def _cargar() -> dict:
     if _RUTA_JSON.exists():
         return json.loads(_RUTA_JSON.read_text(encoding="utf-8"))
-    return dict(_INICIALES)
+    return {}
 
 
 def _guardar(casos: dict) -> None:
