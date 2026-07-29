@@ -61,7 +61,7 @@ jobs:
         with:
           workspaces: src-tauri
 
-      # 7 — Compilar Tauri, firmar, crear release y subir latest.json
+      # 7 — Compilar Tauri, firmar y crear release
       #     TAURI_SIGNING_PRIVATE_KEY debe estar en Settings → Secrets del repo
       - name: Build y publicar release
         uses: tauri-apps/tauri-action@v0
@@ -80,4 +80,44 @@ jobs:
             > al abrir el programa y se actualizarán sin intervención manual.
           releaseDraft: false
           prerelease: false
-          updaterJsonKeepUniversal: true
+
+      # 8 — Generar y subir latest.json manualmente (auto-updater Tauri v2)
+      #     tauri-action no lo genera correctamente para NSIS → lo hacemos aquí
+      - name: Generar y subir latest.json
+        shell: pwsh
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          $version = "${{ github.ref_name }}" -replace '^v', ''
+          $tag     = "${{ github.ref_name }}"
+          $bundle  = "src-tauri/target/release/bundle/nsis"
+
+          # Leer firma del .nsis.zip.sig
+          $sigPath = "$bundle/JUAN-VIVI_${version}_x64-setup.nsis.zip.sig"
+          $sig     = (Get-Content $sigPath -Raw).Trim()
+
+          # URL de descarga del paquete de actualización
+          $url = "https://github.com/Heaven1515/juan-vivi/releases/download/${tag}/JUAN-VIVI_${version}_x64-setup.nsis.zip"
+
+          # Construir latest.json (formato Tauri v2)
+          $json = [ordered]@{
+            version  = $version
+            notes    = "JUAN-VIVI $tag"
+            pub_date = (Get-Date -Format "yyyy-MM-ddTHH:mm:ssZ")
+            platforms = [ordered]@{
+              "windows-x86_64" = [ordered]@{
+                signature = $sig
+                url       = $url
+              }
+            }
+          } | ConvertTo-Json -Depth 5
+          $json | Set-Content "latest.json" -Encoding UTF8
+          Write-Host "latest.json generado:"
+          Write-Host $json
+
+          # Subir latest.json y archivos del updater al release
+          gh release upload $tag `
+            "latest.json" `
+            "$bundle/JUAN-VIVI_${version}_x64-setup.nsis.zip" `
+            "$bundle/JUAN-VIVI_${version}_x64-setup.nsis.zip.sig" `
+            --clobber
