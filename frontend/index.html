@@ -1022,19 +1022,20 @@
 // API Base — se inicializa desde Tauri
 // ═══════════════════════════════════════════════════════════════════
 let API_BASE = '';
+const invoke = window.__TAURI__.core.invoke;
 
 async function initApi() {
   try {
-    const port = await window.__TAURI__.core.invoke('get_api_port');
+    const port = await invoke('get_api_port');
     API_BASE = 'http://127.0.0.1:' + port;
   } catch (e) {
     console.error('Error obteniendo puerto API:', e);
     return;
   }
-  // Esperar hasta que el sidecar Python esté listo (máx 15s)
+  // Esperar hasta que el sidecar Python esté listo (máx 15s) — necesario para módulo Firma
   for (let i = 0; i < 30; i++) {
     try {
-      await fetch(API_BASE + '/licencia', { signal: AbortSignal.timeout(500) });
+      await fetch(API_BASE + '/ping', { signal: AbortSignal.timeout(500) });
       return; // sidecar listo
     } catch (_) {
       await new Promise(r => setTimeout(r, 500));
@@ -1164,9 +1165,9 @@ function onBuscar(q) {
 
 async function buscarEnBD(numero) {
   try {
-    const res = await apiFetch(`/repertorios/buscar/${encodeURIComponent(numero)}`);
-    if (!res.ok || !res.registro) { ocultarResultadoBD(); return; }
-    mostrarResultadoBD(res.registro);
+    const registro = await invoke('buscar_repertorio', { numero });
+    if (!registro) { ocultarResultadoBD(); return; }
+    mostrarResultadoBD(registro);
   } catch (_) { ocultarResultadoBD(); }
 }
 
@@ -1231,10 +1232,7 @@ async function abrirYCargarExcel() {
     if (!rutas) return;
     const arr = Array.isArray(rutas) ? rutas : [rutas];
     mostrarToast(`Leyendo ${arr.length} archivo(s)...`, 'none');
-    const res = await apiFetch('/cargar-excel', {
-      method: 'POST',
-      body: JSON.stringify({ rutas: arr })
-    });
+    const res = await invoke('cargar_excel', { rutas: arr });
     if (res.ok) {
       cargarDatos(res.nombre, res.filas, res.avisos);
     } else {
@@ -1247,17 +1245,14 @@ async function abrirYCargarExcel() {
 
 async function generarPlanilla() {
   try {
-    const infoRes = await apiFetch('/nombre-planilla');
+    const nombreSugerido = await invoke('nombre_planilla');
     const ruta = await window.__TAURI__.dialog.save({
-      defaultPath: infoRes.nombre,
+      defaultPath: nombreSugerido,
       filters: [{ name: 'Excel', extensions: ['xlsx'] }]
     });
     if (!ruta) return;
     mostrarToast('Generando...', 'none');
-    const res = await apiFetch('/generar-planilla', {
-      method: 'POST',
-      body: JSON.stringify({ ruta_destino: ruta })
-    });
+    const res = await invoke('generar_planilla', { ruta_destino: ruta });
     if (res.ok) {
       mostrarToast(`Planilla generada: ${res.nombre}`, 'ok');
     } else {
@@ -1433,9 +1428,9 @@ function onRepNumInput(valor) {
 
 async function buscarRepertorio(numero) {
   try {
-    const res = await apiFetch(`/firma/buscar-caso/${encodeURIComponent(numero)}`);
-    if (!res.ok || !res.caso) return;   // no está en BD — el usuario llena manualmente
-    _rellenarFormFirma(res.caso);
+    const caso = await invoke('buscar_caso', { numero });
+    if (!caso) return;   // no está en BD — el usuario llena manualmente
+    _rellenarFormFirma(caso);
     mostrarToast(`Repertorio ${numero} encontrado`, 'ok');
   } catch (e) { /* silencioso */ }
 }
@@ -1602,11 +1597,7 @@ async function cargarPlanillaRepertorios() {
     if (!ruta) return;
     const archivo = Array.isArray(ruta) ? ruta[0] : ruta;
     mostrarToast('Cargando planilla...', 'ok');
-    const res = await apiFetch('/repertorios/cargar-excel', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ ruta: archivo }),
-    });
+    const res = await invoke('cargar_repertorios_excel', { ruta: archivo });
     if (!res.ok) { mostrarToast(`Error: ${res.error}`, 'err'); return; }
 
     const errMsg = res.errores?.length ? ` · ${res.errores.length} fila(s) con error` : '';
@@ -1671,12 +1662,8 @@ async function reemplazarDuplicado(idx) {
   const d = window._dupCache?.[idx];
   if (!d) return;
   try {
-    const res = await apiFetch('/repertorios/reemplazar', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ numero: d.numero, datos: d.entrante }),
-    });
-    if (res.ok) {
+    await invoke('reemplazar_repertorio', { numero: d.numero, datos: d.entrante });
+    {
       mostrarToast(`Repertorio ${d.numero} reemplazado`, 'ok');
       // Marcar visualmente como resuelto
       const filas = document.getElementById('dupLista').children;
@@ -1685,8 +1672,6 @@ async function reemplazarDuplicado(idx) {
         filas[idx].querySelector('button').disabled = true;
         filas[idx].querySelector('button').textContent = 'Reemplazado';
       }
-    } else {
-      mostrarToast(`Error: ${res.error}`, 'err');
     }
   } catch (e) {
     mostrarToast('Error al reemplazar', 'err');
@@ -1759,23 +1744,17 @@ async function guardarCasoManual() {
   }
 
   try {
-    const res = await apiFetch('/firma/agregar-caso', {
-      method: 'POST',
-      body: JSON.stringify({
+    await invoke('agregar_caso', {
+      caso: {
         numero, anho,
         tipo_contrato: materia,
         fecha_dia: parseInt(dia),
         fecha_mes: parseInt(mes),
         fecha_anio: parseInt(anioF)
-      })
+      }
     });
-
-    if (res.ok) {
-      mostrarToast(`Escritura ${numero}-${anho} guardada`, 'ok');
-      cerrarModalAgregarCaso();
-    } else {
-      mostrarToast(`Error: ${res.error}`, 'err');
-    }
+    mostrarToast(`Escritura ${numero}-${anho} guardada`, 'ok');
+    cerrarModalAgregarCaso();
   } catch (e) {
     mostrarToast('Error al guardar: ' + e, 'err');
   }
@@ -1804,14 +1783,14 @@ async function init() {
 
 async function checkLicencia() {
   try {
-    const res = await apiFetch('/licencia');
+    const res = await invoke('verificar_licencia');
     if (!res.activo) {
       const pantalla = document.getElementById('bloqueoPantalla');
       if (res.mensaje) document.getElementById('bloqueoMensaje').textContent = res.mensaje;
       pantalla.style.display = 'flex';
     }
   } catch(e) {
-    // Si el sidecar no respondió aún, dejar pasar
+    // Si falla, modo permisivo
   }
 }
 

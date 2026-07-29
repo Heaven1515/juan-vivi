@@ -5,6 +5,18 @@ use tauri::{AppHandle, Listener, Manager, State};
 use tauri_plugin_shell::ShellExt;
 use tauri_plugin_shell::process::{CommandChild, CommandEvent};
 
+mod almacenamiento;
+mod modelos;
+mod casos;
+mod licencia;
+mod repertorios;
+mod lector;
+mod transformador;
+mod escritor;
+mod planilla_cmd;
+
+// ─── Estado del sidecar Python ───────────────────────────────────────────────
+
 struct ApiPort(Mutex<u16>);
 struct Sidecar(Mutex<Option<CommandChild>>);
 struct ShuttingDown(AtomicBool);
@@ -67,6 +79,8 @@ fn spawn_backend(app: AppHandle, port: u16) {
     }
 }
 
+// ─── Entry point ─────────────────────────────────────────────────────────────
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     let port = find_free_port();
@@ -79,7 +93,21 @@ pub fn run() {
         .manage(ApiPort(Mutex::new(port)))
         .manage(Sidecar(Mutex::new(None)))
         .manage(ShuttingDown(AtomicBool::new(false)))
-        .invoke_handler(tauri::generate_handler![get_api_port])
+        .manage(Mutex::new(modelos::EstadoPlanilla::default()))
+        .invoke_handler(tauri::generate_handler![
+            get_api_port,
+            casos::buscar_caso,
+            casos::agregar_caso,
+            casos::listar_casos,
+            casos::eliminar_caso,
+            licencia::verificar_licencia,
+            repertorios::buscar_repertorio,
+            repertorios::reemplazar_repertorio,
+            repertorios::cargar_repertorios_excel,
+            planilla_cmd::cargar_excel,
+            planilla_cmd::nombre_planilla,
+            planilla_cmd::generar_planilla,
+        ])
         .setup(move |app| {
             spawn_backend(app.handle().clone(), port);
 
