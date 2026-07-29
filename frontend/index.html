@@ -497,6 +497,35 @@
     }
     .modal-box .lbl { margin-top: 4px; }
 
+    /* ── Tarjeta resultado buscador BD ─────────────────────────────── */
+    .bdr-card {
+      position: absolute;
+      top: calc(100% + 8px);
+      left: 0;
+      width: 360px;
+      z-index: 200;
+      background: rgba(6,14,44,0.97);
+      backdrop-filter: blur(28px) saturate(160%);
+      border: 1px solid rgba(255,255,255,0.14);
+      border-radius: 18px;
+      padding: 18px 18px 16px;
+      box-shadow: 0 28px 60px rgba(3,10,35,0.55);
+      color: #e9edf7;
+    }
+    .bdr-num  { font-family: "JetBrains Mono", monospace; font-size: 22px; font-weight: 700; letter-spacing: -0.5px; }
+    .bdr-lbl  { font-size: 9.5px; letter-spacing: 0.18em; text-transform: uppercase; color: rgba(233,237,247,0.42); margin-top: 12px; margin-bottom: 3px; }
+    .bdr-val  { font-size: 13px; color: #e9edf7; line-height: 1.45; }
+    .bdr-sep  { border: none; border-top: 1px solid rgba(255,255,255,0.09); margin: 10px 0; }
+    .bdr-cliente-autofin { display:inline-block; padding:3px 10px; border-radius:20px; font-size:11px; font-weight:700; background:rgba(47,109,240,0.18); border:1px solid rgba(47,109,240,0.3); color:#93bbff; }
+    .bdr-cliente-global  { display:inline-block; padding:3px 10px; border-radius:20px; font-size:11px; font-weight:700; background:rgba(16,163,106,0.18); border:1px solid rgba(16,163,106,0.3); color:#6ee7b7; }
+
+    /* ── Modal duplicados ───────────────────────────────────────────── */
+    .dup-table { width:100%; border-collapse:collapse; font-size:12.5px; margin-top:6px; }
+    .dup-table th { padding:7px 10px; font-size:10px; letter-spacing:0.14em; text-transform:uppercase; color:#9aa2b1; border-bottom:1px solid #eef1f6; text-align:left; }
+    .dup-table td { padding:8px 10px; border-bottom:1px solid #f1f3f8; vertical-align:top; }
+    .dup-col-lbl { font-size:9.5px; letter-spacing:0.14em; text-transform:uppercase; color:#9aa2b1; margin-bottom:3px; }
+    .dup-col-val { font-size:12.5px; color:#1a2340; line-height:1.4; }
+
     /* ── Barra de distribución ─────────────────────────────────────── */
     .bar-track { height: 10px; border-radius: 6px; background: #eef1f6; overflow: hidden; }
     .bar-fill  { height: 100%; border-radius: 6px; background: linear-gradient(90deg, #6f9dff, #1741b8); }
@@ -614,13 +643,47 @@
     <header class="topbar">
       <div class="search-wrap">
         <input data-glass class="search-input" id="buscador" type="search"
-               placeholder="Ingrese N° de repertorio" oninput="onBuscar(this.value)">
+               placeholder="Ingrese N° de repertorio" oninput="onBuscar(this.value)"
+               autocomplete="off">
         <span class="search-icon">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
             <path d="M11 19a8 8 0 1 0 0-16 8 8 0 0 0 0 16zM21 21l-4.3-4.3"/>
           </svg>
         </span>
+        <!-- Tarjeta resultado BD -->
+        <div id="bdResultCard" class="bdr-card hidden">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start">
+            <div>
+              <div style="font-size:10px;letter-spacing:0.16em;text-transform:uppercase;color:rgba(233,237,247,0.42)">Repertorio</div>
+              <div class="bdr-num" id="bdrNum">—</div>
+            </div>
+            <button onclick="ocultarResultadoBD()"
+                    style="background:none;border:none;cursor:pointer;color:rgba(233,237,247,0.5);font-size:18px;line-height:1;padding:2px 4px">&times;</button>
+          </div>
+          <hr class="bdr-sep">
+          <div class="bdr-lbl">Cliente</div>
+          <div class="bdr-val" id="bdrCliente">—</div>
+          <div class="bdr-lbl">OT</div>
+          <div class="bdr-val mono" id="bdrOT">—</div>
+          <div class="bdr-lbl">Fecha</div>
+          <div class="bdr-val mono" id="bdrFecha">—</div>
+          <hr class="bdr-sep">
+          <div class="bdr-lbl">Materia</div>
+          <div class="bdr-val" id="bdrMateria" style="font-size:12px">—</div>
+          <div class="bdr-lbl">Compareciente</div>
+          <div class="bdr-val" id="bdrComparec">—</div>
+        </div>
       </div>
+      <!-- Botón cargar planilla repertorios -->
+      <button onclick="cargarPlanillaRepertorios()" title="Cargar planilla de repertorios"
+              style="height:44px;width:44px;border-radius:12px;border:1px solid rgba(255,255,255,0.16);background:rgba(255,255,255,0.10);backdrop-filter:blur(18px);cursor:pointer;color:#6f9dff;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:background 0.14s"
+              onmouseover="this.style.background='rgba(111,157,255,0.2)'"
+              onmouseout="this.style.background='rgba(255,255,255,0.10)'">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+          <polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
+        </svg>
+      </button>
       <div class="spacer"></div>
       <div class="datetime-pill">
         <span class="dt-item">
@@ -808,14 +871,26 @@
               </button>
             </div>
 
-            <!-- Botón agregar escritura manual -->
-            <button class="btn-prim" style="height:42px;border-radius:21px;font-size:13px"
-                    onclick="abrirModalAgregarCaso()">
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
-              </svg>
-              Agregar escritura a base de datos
-            </button>
+            <!-- Botones base de datos -->
+            <div style="display:flex;flex-direction:column;gap:8px">
+              <button class="btn-prim" style="height:42px;border-radius:21px;font-size:13px"
+                      onclick="abrirModalAgregarCaso()">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+                </svg>
+                Agregar escritura a base de datos
+              </button>
+              <button onclick="cargarBDDesdeExcel()"
+                      style="height:42px;border-radius:21px;font-size:13px;display:inline-flex;align-items:center;justify-content:center;gap:8px;border:1px solid rgba(111,157,255,0.35);background:rgba(111,157,255,0.1);color:#a8c0ff;cursor:pointer;font-family:inherit;font-weight:600;transition:background 0.14s"
+                      onmouseover="this.style.background='rgba(111,157,255,0.2)'"
+                      onmouseout="this.style.background='rgba(111,157,255,0.1)'">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                  <polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
+                </svg>
+                Cargar base de datos desde Excel
+              </button>
+            </div>
 
             <!-- Lista PDFs -->
             <div class="sec" style="padding:20px;display:flex;flex-direction:column;gap:14px">
@@ -909,6 +984,21 @@
     Esta aplicación ha sido desactivada.
   </div>
   <div style="font-size:12px;opacity:.4;margin-top:8px">33ª Notaría · JUAN-VIVI</div>
+</div>
+
+<!-- Modal: duplicados al cargar planilla -->
+<div id="modalDuplicados" class="modal-overlay hidden" onclick="if(event.target===this)cerrarModalDuplicados()">
+  <div class="modal-box" style="width:680px;max-width:calc(100vw - 40px);max-height:80vh;overflow-y:auto">
+    <div class="modal-title">Repertorios duplicados detectados</div>
+    <div style="font-size:12.5px;color:#6b7280;margin-top:-6px">
+      Estos repertorios ya existen en la base de datos. Revisa cada uno y decide si reemplazas el registro existente.
+    </div>
+    <div id="dupLista" style="display:flex;flex-direction:column;gap:18px;margin-top:4px"></div>
+    <button onclick="cerrarModalDuplicados()"
+            style="height:42px;border-radius:21px;border:1px solid #dde3ef;background:none;cursor:pointer;font-size:14px;color:#374268;font-family:inherit;font-weight:600;margin-top:4px">
+      Cerrar
+    </button>
+  </div>
 </div>
 
 <div id="toast" class="aviso hidden"></div>
@@ -1021,9 +1111,44 @@ function irVista(btn, vista) {
 // ═══════════════════════════════════════════════════════════════════
 // Búsqueda
 // ═══════════════════════════════════════════════════════════════════
+let _bdBuscarTimer = null;
+
 function onBuscar(q) {
   estado.busqueda = q.trim().toLowerCase();
   renderTabla();
+
+  // Consultar BD de repertorios
+  clearTimeout(_bdBuscarTimer);
+  const num = q.trim();
+  if (!num) { ocultarResultadoBD(); return; }
+  _bdBuscarTimer = setTimeout(() => buscarEnBD(num), 350);
+}
+
+async function buscarEnBD(numero) {
+  try {
+    const res = await apiFetch(`/repertorios/buscar/${encodeURIComponent(numero)}`);
+    if (!res.ok || !res.registro) { ocultarResultadoBD(); return; }
+    mostrarResultadoBD(res.registro);
+  } catch (_) { ocultarResultadoBD(); }
+}
+
+function mostrarResultadoBD(r) {
+  document.getElementById('bdrNum').textContent     = r.repertorio || '—';
+  document.getElementById('bdrOT').textContent      = r.ot         || '—';
+  document.getElementById('bdrFecha').textContent   = r.fecha      || '—';
+  document.getElementById('bdrMateria').textContent = r.materia    || '—';
+  document.getElementById('bdrComparec').textContent = r.compareciente || '—';
+
+  const clienteEl = document.getElementById('bdrCliente');
+  const clase = (r.cliente || '').toLowerCase().includes('global')
+    ? 'bdr-cliente-global' : 'bdr-cliente-autofin';
+  clienteEl.innerHTML = `<span class="${clase}">${r.cliente || '—'}</span>`;
+
+  document.getElementById('bdResultCard').classList.remove('hidden');
+}
+
+function ocultarResultadoBD() {
+  document.getElementById('bdResultCard').classList.add('hidden');
 }
 
 // ═══════════════════════════════════════════════════════════════════
@@ -1427,6 +1552,144 @@ function icoFile(sz) {
 }
 
 // ═══════════════════════════════════════════════════════════════════
+// Cargar planilla de repertorios (BD histórica)
+// ═══════════════════════════════════════════════════════════════════
+async function cargarPlanillaRepertorios() {
+  try {
+    const ruta = await window.__TAURI__.dialog.open({
+      multiple: false,
+      filters: [{ name: 'Excel', extensions: ['xlsx'] }],
+      title: 'Seleccionar planilla juan REPERTORIOS',
+    });
+    if (!ruta) return;
+    const archivo = Array.isArray(ruta) ? ruta[0] : ruta;
+    mostrarToast('Cargando planilla...', 'ok');
+    const res = await apiFetch('/repertorios/cargar-excel', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ruta: archivo }),
+    });
+    if (!res.ok) { mostrarToast(`Error: ${res.error}`, 'err'); return; }
+
+    const errMsg = res.errores?.length ? ` · ${res.errores.length} fila(s) con error` : '';
+    mostrarToast(`${res.cargados} repertorio(s) cargados${errMsg}`, 'ok');
+
+    if (res.duplicados?.length) {
+      mostrarModalDuplicados(res.duplicados);
+    }
+  } catch (e) {
+    mostrarToast('Error al cargar la planilla', 'err');
+  }
+}
+
+function mostrarModalDuplicados(duplicados) {
+  const lista = document.getElementById('dupLista');
+  lista.innerHTML = duplicados.map((d, i) => `
+    <div style="border:1px solid #eaedf4;border-radius:14px;overflow:hidden">
+      <div style="background:#f7f8fb;padding:10px 14px;display:flex;justify-content:space-between;align-items:center">
+        <span style="font-family:'JetBrains Mono',monospace;font-size:14px;font-weight:700;color:#1a2340">
+          Repertorio ${d.numero}
+        </span>
+        <button class="btn-prim" style="height:32px;padding:0 14px;border-radius:16px;font-size:12px"
+                onclick="reemplazarDuplicado(${i})">
+          Reemplazar
+        </button>
+      </div>
+      <table class="dup-table">
+        <thead>
+          <tr>
+            <th style="width:30%">Campo</th>
+            <th>En base de datos</th>
+            <th>Entrando desde Excel</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${_filaDup('OT',             d.existente.ot,            d.entrante.ot)}
+          ${_filaDup('Fecha',          d.existente.fecha,         d.entrante.fecha)}
+          ${_filaDup('Cliente',        d.existente.cliente,       d.entrante.cliente)}
+          ${_filaDup('Materia',        d.existente.materia,       d.entrante.materia)}
+          ${_filaDup('Compareciente',  d.existente.compareciente, d.entrante.compareciente)}
+        </tbody>
+      </table>
+    </div>
+  `).join('');
+
+  // Guardar duplicados en variable global para acceso desde reemplazarDuplicado()
+  window._dupCache = duplicados;
+  document.getElementById('modalDuplicados').classList.remove('hidden');
+}
+
+function _filaDup(campo, existente, entrante) {
+  const distinto = (existente || '') !== (entrante || '');
+  const estilo   = distinto ? 'background:#fffbe6' : '';
+  return `<tr style="${estilo}">
+    <td style="color:#6b7280;font-size:11.5px;font-weight:600">${campo}</td>
+    <td class="dup-col-val">${existente || '—'}</td>
+    <td class="dup-col-val" style="${distinto ? 'color:#1741b8;font-weight:600' : ''}">${entrante || '—'}</td>
+  </tr>`;
+}
+
+async function reemplazarDuplicado(idx) {
+  const d = window._dupCache?.[idx];
+  if (!d) return;
+  try {
+    const res = await apiFetch('/repertorios/reemplazar', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ numero: d.numero, datos: d.entrante }),
+    });
+    if (res.ok) {
+      mostrarToast(`Repertorio ${d.numero} reemplazado`, 'ok');
+      // Marcar visualmente como resuelto
+      const filas = document.getElementById('dupLista').children;
+      if (filas[idx]) {
+        filas[idx].style.opacity = '0.4';
+        filas[idx].querySelector('button').disabled = true;
+        filas[idx].querySelector('button').textContent = 'Reemplazado';
+      }
+    } else {
+      mostrarToast(`Error: ${res.error}`, 'err');
+    }
+  } catch (e) {
+    mostrarToast('Error al reemplazar', 'err');
+  }
+}
+
+function cerrarModalDuplicados() {
+  document.getElementById('modalDuplicados').classList.add('hidden');
+  window._dupCache = null;
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// Cargar base de datos desde Excel
+// ═══════════════════════════════════════════════════════════════════
+async function cargarBDDesdeExcel() {
+  try {
+    const ruta = await window.__TAURI__.dialog.open({
+      multiple: false,
+      filters: [{ name: 'Excel', extensions: ['xlsx'] }],
+      title: 'Seleccionar planilla de base de datos',
+    });
+    if (!ruta) return;
+    const archivo = Array.isArray(ruta) ? ruta[0] : ruta;
+    mostrarToast('Cargando base de datos...', 'ok');
+    const res = await apiFetch('/firma/cargar-bd-excel', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ruta: archivo }),
+    });
+    if (res.ok) {
+      const errMsg = res.errores?.length ? ` (${res.errores.length} filas con error)` : '';
+      mostrarToast(`${res.cargados} caso(s) cargados correctamente${errMsg}`, 'ok');
+    } else {
+      mostrarToast(`Error: ${res.error}`, 'err');
+    }
+  } catch (e) {
+    mostrarToast('Error al cargar el archivo', 'err');
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════
 // Modal: agregar escritura manualmente
 // ═══════════════════════════════════════════════════════════════════
 
@@ -1488,6 +1751,12 @@ async function init() {
   setInterval(tickReloj, 1000);
   renderTabla();  // tabla vacía hasta que se cargue un Excel
   renderPDFs();   // lista vacía hasta que se entre a la vista Firma
+
+  // Cerrar tarjeta BD al hacer click fuera del buscador
+  document.addEventListener('click', e => {
+    const wrap = document.getElementById('buscador')?.closest('.search-wrap');
+    if (wrap && !wrap.contains(e.target)) ocultarResultadoBD();
+  });
 
   await initApi();
   await checkLicencia();

@@ -29,3 +29,9 @@ src-tauri/target/
 dist/
 .tauri-key
 icon_src.png
+
+# ── Binarios compilados (se generan en el build) ────────────────────────────────
+src-tauri/binaries/
+
+# ── Datos locales (BD JSON — persisten en AppData, no en repo) ──────────────────
+data/

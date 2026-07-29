@@ -2,15 +2,24 @@
 Persistencia de casos de firma en archivo JSON.
 
 Reemplaza casos_prueba.py — los datos sobreviven entre sesiones.
-El archivo se guarda en data/casos.json en la raíz del proyecto.
+Cuando el sidecar está empaquetado (frozen), el archivo se guarda en
+%LOCALAPPDATA%\JUAN-VIVI\casos.json para que persista entre versiones.
+En desarrollo se guarda en data/casos.json en la raíz del proyecto.
 Los 3 casos de prueba originales se insertan si el archivo no existe.
 """
 
 import json
+import os
+import sys
 from pathlib import Path
 
-_RAIZ = Path(__file__).parent.parent.parent
-_RUTA_JSON = _RAIZ / "data" / "casos.json"
+def _ruta_datos() -> Path:
+    if getattr(sys, "frozen", False):
+        base = Path(os.environ.get("LOCALAPPDATA", Path.home() / "AppData" / "Local"))
+        return base / "JUAN-VIVI" / "casos.json"
+    return Path(__file__).parent.parent.parent / "data" / "casos.json"
+
+_RUTA_JSON = _ruta_datos()
 
 # Casos de prueba iniciales (migrados desde casos_prueba.py)
 _INICIALES: dict[str, dict] = {
@@ -89,3 +98,78 @@ def listar_casos() -> list[dict]:
     """Retorna todos los casos ordenados por número."""
     casos = _cargar()
     return sorted(casos.values(), key=lambda c: int(c["numero"]) if c["numero"].isdigit() else 0)
+
+
+def cargar_desde_excel(ruta: str) -> tuple[int, list[str]]:
+    """
+    Lee un Excel con columnas:
+      N° Repertorio | Año | Tipo de Contrato | Día | Mes | Año escritura
+
+    Detecta las columnas por su encabezado (fila 1) buscando palabras clave.
+    Agrega o sobreescribe casos en la BD.
+    Retorna (cantidad_cargada, lista_de_errores).
+    """
+    import openpyxl
+
+    wb = openpyxl.load_workbook(ruta, data_only=True)
+    ws = wb.active
+
+    # ── Detectar columnas por encabezado (fila 1) ─────────────────────────
+    encabezados = [str(c.value or "").strip().lower() for c in ws[1]]
+
+    def _col(palabras: list[str]) -> int | None:
+        for i, h in enumerate(encabezados):
+            if any(p in h for p in palabras):
+                return i
+        return None
+
+    ci_num   = _col(["repertorio", "n°", "numero", "número", "rep"])
+    ci_anho  = _col(["año rep", "anho rep", "año_r", "año r"])
+    if ci_anho is None:
+        ci_anho = _col(["año", "anho", "year"])
+    ci_tipo  = _col(["tipo", "materia", "contrato"])
+    ci_dia   = _col(["día", "dia"])
+    ci_mes   = _col(["mes"])
+    ci_anio  = _col(["año escr", "anho escr", "año_e", "año e", "año esc"])
+    if ci_anio is None and ci_anho is not None:
+        # Buscar una segunda columna con "año" (distinta de ci_anho)
+        for i, h in enumerate(encabezados):
+            if "año" in h or "anho" in h:
+                if i != ci_anho:
+                    ci_anio = i
+                    break
+
+    faltantes = []
+    for nombre, idx in [("N° Repertorio", ci_num), ("Tipo de Contrato", ci_tipo),
+                        ("Día", ci_dia), ("Mes", ci_mes)]:
+        if idx is None:
+            faltantes.append(nombre)
+    if faltantes:
+        raise ValueError(f"Columnas no encontradas: {', '.join(faltantes)}")
+
+    casos = _cargar()
+    cargados = 0
+    errores: list[str] = []
+
+    for fila_idx, fila in enumerate(ws.iter_rows(min_row=2, values_only=True), start=2):
+        num_raw = fila[ci_num] if ci_num is not None else None
+        if not num_raw:
+            continue  # fila vacía
+        try:
+            numero = str(int(float(str(num_raw).strip())))
+            anho   = str(int(float(str(fila[ci_anho]).strip()))) if ci_anho is not None and fila[ci_anho] else "2026"
+            tipo   = str(fila[ci_tipo] or "").strip().upper() if ci_tipo is not None else ""
+            dia    = int(float(str(fila[ci_dia]).strip())) if ci_dia is not None and fila[ci_dia] else 1
+            mes    = int(float(str(fila[ci_mes]).strip())) if ci_mes is not None and fila[ci_mes] else 1
+            anio_e = int(float(str(fila[ci_anio]).strip())) if ci_anio is not None and fila[ci_anio] else int(anho)
+
+            casos[numero] = {
+                "numero": numero, "anho": anho, "tipo_contrato": tipo,
+                "fecha_dia": dia, "fecha_mes": mes, "fecha_anio": anio_e,
+            }
+            cargados += 1
+        except Exception as e:
+            errores.append(f"Fila {fila_idx}: {e}")
+
+    _guardar(casos)
+    return cargados, errores

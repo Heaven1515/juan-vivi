@@ -61,7 +61,12 @@ from juan_vivi.infraestructura.lector import leer_multiples
 from juan_vivi.infraestructura.escritor import escribir_planilla, nombre_archivo_salida
 from juan_vivi.dominio.transformador import transformar_lote
 from juan_vivi.infraestructura import firma_controller
-from juan_vivi.infraestructura.base_casos import buscar_caso, agregar_caso, listar_casos
+from juan_vivi.infraestructura.base_casos import buscar_caso, agregar_caso, listar_casos, cargar_desde_excel
+from juan_vivi.infraestructura.base_repertorios import (
+    buscar as buscar_repertorio,
+    reemplazar_registro,
+    cargar_desde_juan_repertorios,
+)
 
 app = FastAPI(title="JUAN-VIVI API")
 app.add_middleware(
@@ -115,6 +120,13 @@ class AgregarCasoBody(BaseModel):
     fecha_dia: int
     fecha_mes: int
     fecha_anio: int
+
+class CargarBDExcelBody(BaseModel):
+    ruta: str
+
+class ReemplazarRepertorioBody(BaseModel):
+    numero: str
+    datos: dict
 
 
 # ── Repertorios ──────────────────────────────────────────────────────────────
@@ -242,6 +254,41 @@ def agregar_caso_ep(body: AgregarCasoBody):
 @app.get("/firma/listar-casos")
 def listar_casos_ep():
     return {"ok": True, "casos": listar_casos()}
+
+
+@app.post("/firma/cargar-bd-excel")
+def cargar_bd_excel_ep(body: CargarBDExcelBody):
+    try:
+        cargados, errores = cargar_desde_excel(body.ruta)
+        return {"ok": True, "cargados": cargados, "errores": errores}
+    except Exception as e:
+        return {"ok": False, "error": str(e)}
+
+
+# ── Repertorios BD ───────────────────────────────────────────────────────────
+
+@app.get("/repertorios/buscar/{numero}")
+def buscar_repertorio_ep(numero: str):
+    registro = buscar_repertorio(numero)
+    return {"ok": registro is not None, "registro": registro}
+
+
+@app.post("/repertorios/cargar-excel")
+def cargar_excel_repertorios(body: CargarBDExcelBody):
+    try:
+        cargados, duplicados, errores = cargar_desde_juan_repertorios(body.ruta)
+        return {"ok": True, "cargados": cargados, "duplicados": duplicados, "errores": errores}
+    except Exception as e:
+        return {"ok": False, "error": str(e)}
+
+
+@app.post("/repertorios/reemplazar")
+def reemplazar_repertorio_ep(body: ReemplazarRepertorioBody):
+    try:
+        reemplazar_registro(body.numero, body.datos)
+        return {"ok": True}
+    except Exception as e:
+        return {"ok": False, "error": str(e)}
 
 
 # ── Licencia ─────────────────────────────────────────────────────────────────
