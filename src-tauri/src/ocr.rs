@@ -7,8 +7,9 @@ use std::path::Path;
 
 // ─── Patrones regex ───────────────────────────────────────────────────────────
 
+// Flexible: "REPERTORIO N° 3.090 - 2024", "REPERTORION°3090", "REPERTORIO 1234", etc.
 static RE_REPERTORIO: Lazy<Regex> = Lazy::new(|| {
-    Regex::new(r"(?i)REPERTORIO\s+N[°º]?\s*([\d.]+)\s*[-–]\s*(\d{4})").unwrap()
+    Regex::new(r"(?i)REPERTORIO\s*N?[°oº]?\s*([\d.]+)(?:\s*[-–]\s*(\d{4}))?").unwrap()
 });
 
 static RE_PROTOCOLIZADO: Lazy<Regex> = Lazy::new(|| {
@@ -175,11 +176,16 @@ fn ocr_primera_pagina(
 }
 
 fn extraer_repertorio(texto: &str) -> (Option<String>, Option<String>) {
-    if let Some(cap) = RE_REPERTORIO.captures(texto) {
-        let numero_raw = cap.get(1).map(|m| m.as_str()).unwrap_or("");
+    // Solo buscar en el primer cuarto del texto — el repertorio siempre aparece arriba
+    let lineas: Vec<&str> = texto.lines().collect();
+    let limite = (lineas.len() / 4).max(10).min(lineas.len());
+    let zona = lineas[..limite].join("\n");
+
+    if let Some(cap) = RE_REPERTORIO.captures(&zona) {
+        let numero = cap.get(1)
+            .map(|m| m.as_str().replace('.', ""))
+            .unwrap_or_default();
         let anho = cap.get(2).map(|m| m.as_str().to_string());
-        // Quitar puntos del número (ej: 3.090 → 3090)
-        let numero = numero_raw.replace('.', "");
         (Some(numero), anho)
     } else {
         (None, None)
