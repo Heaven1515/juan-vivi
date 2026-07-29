@@ -1004,77 +1004,20 @@
   </div>
 </div>
 
-<!-- Banner: backend caído -->
-<div id="bannerBackend" style="
-  display:none;position:fixed;top:0;left:0;right:0;z-index:99999;
-  background:linear-gradient(90deg,#7f1d1d,#991b1b);
-  color:#fff;font-family:'Plus Jakarta Sans',sans-serif;font-size:13px;font-weight:600;
-  padding:10px 20px;text-align:center;letter-spacing:.3px;
-  box-shadow:0 2px 12px rgba(0,0,0,0.4);
-">
-  ⚠ Motor interno no disponible — reconectando…
-</div>
-
 <div id="toast" class="aviso hidden"></div>
 
 <script>
 // ═══════════════════════════════════════════════════════════════════
-// API Base — se inicializa desde Tauri
+// Toda la lógica es ahora Rust — no hay sidecar Python
 // ═══════════════════════════════════════════════════════════════════
-let API_BASE = '';
 const invoke = window.__TAURI__.core.invoke;
 
 async function initApi() {
-  try {
-    const port = await invoke('get_api_port');
-    API_BASE = 'http://127.0.0.1:' + port;
-  } catch (e) {
-    console.error('Error obteniendo puerto API:', e);
-    return;
-  }
-  // Esperar hasta que el sidecar Python esté listo (máx 15s) — necesario para módulo Firma
-  for (let i = 0; i < 30; i++) {
-    try {
-      await fetch(API_BASE + '/ping', { signal: AbortSignal.timeout(500) });
-      return; // sidecar listo
-    } catch (_) {
-      await new Promise(r => setTimeout(r, 500));
-    }
-  }
-}
-
-async function apiFetch(path, opts) {
-  const url = API_BASE + path;
-  const defaultOpts = {
-    headers: { 'Content-Type': 'application/json' },
-  };
-  const merged = Object.assign({}, defaultOpts, opts);
-  const res = await fetch(url, merged);
-  return res.json();
-}
-
-// ═══════════════════════════════════════════════════════════════════
-// Healthcheck — detecta si el backend cayó y lo muestra en banner
-// ═══════════════════════════════════════════════════════════════════
-let _backendCaido = false;
-
-async function pingBackend() {
-  try {
-    await fetch(API_BASE + '/ping', { signal: AbortSignal.timeout(3000) });
-    if (_backendCaido) {
-      _backendCaido = false;
-      document.getElementById('bannerBackend').style.display = 'none';
-    }
-  } catch (_) {
-    if (!_backendCaido) {
-      _backendCaido = true;
-      document.getElementById('bannerBackend').style.display = 'block';
-    }
-  }
+  // Toda la lógica es ahora Rust — no hay sidecar Python
 }
 
 function iniciarPingBackend() {
-  setInterval(pingBackend, 15000);
+  // Eliminado — ya no hay backend Python que monitorear
 }
 
 // ═══════════════════════════════════════════════════════════════════
@@ -1318,7 +1261,7 @@ function iniciarPollingAuto() {
   _autoTimer = setInterval(async () => {
     if (estado.vista !== 'firma') return;
     try {
-      const s = await apiFetch('/firma/estado-auto');
+      const s = await invoke('estado_auto');
       actualizarContadores(s.subidos || 0, s.errores || 0);
     } catch (e) { /* silencioso */ }
   }, 5000);
@@ -1329,13 +1272,13 @@ function iniciarPollingAuto() {
 // ═══════════════════════════════════════════════════════════════════
 async function cargarListaPDFs() {
   try {
-    const res = await apiFetch('/firma/listar-pdfs');
-    if (!res.ok) return;
-    firma.archivos = res.archivos;
-    firma.carpeta  = res.carpeta;
-    document.getElementById('carpetaLabel').textContent = res.carpeta;
+    const archivos = await invoke('listar_pdfs');
+    firma.archivos = archivos;
+    const carpeta = await invoke('get_carpeta_scanner');
+    firma.carpeta  = carpeta;
+    document.getElementById('carpetaLabel').textContent = carpeta;
     renderPDFs();
-  } catch (e) { /* API todavia arrancando */ }
+  } catch (e) { /* silencioso */ }
 }
 
 function renderPDFs() {
@@ -1383,7 +1326,7 @@ function selPDF(idx) {
 // ── Visor PDF (JS fetches pages one by one) ──────────────────────
 async function cargarVisorPDF(nombre) {
   try {
-    const first = await apiFetch(`/firma/pdf-page/${encodeURIComponent(nombre)}/0`);
+    const first = await invoke('pdf_pagina', { nombre, pagina: 0 });
     if (!first.ok) {
       document.getElementById('pageViewer').innerHTML =
         '<div class="page-viewer-msg" style="color:#c0392b">Error al renderizar el PDF</div>';
@@ -1392,12 +1335,12 @@ async function cargarVisorPDF(nombre) {
     iniciarVisorPDF(first.total);
     agregarPaginaVisor(1, first.total, first.data);
     for (let i = 1; i < first.total; i++) {
-      const res = await apiFetch(`/firma/pdf-page/${encodeURIComponent(nombre)}/${i}`);
+      const res = await invoke('pdf_pagina', { nombre, pagina: i });
       if (res.ok) agregarPaginaVisor(i + 1, first.total, res.data);
     }
   } catch (e) {
     document.getElementById('pageViewer').innerHTML =
-      '<div class="page-viewer-msg" style="color:#c0392b">Error al conectar con el backend</div>';
+      '<div class="page-viewer-msg" style="color:#c0392b">Error al renderizar el PDF</div>';
   }
 }
 
@@ -1458,7 +1401,7 @@ function _rellenarFormFirma(datos) {
 // ═══════════════════════════════════════════════════════════════════
 async function toggleAuto() {
   try {
-    const s = await apiFetch('/firma/toggle-auto', { method: 'POST' });
+    const s = await invoke('toggle_auto');
     _aplicarEstadoAuto(s);
   } catch (e) {
     mostrarToast('Error al cambiar modo automático', 'err');
@@ -1513,14 +1456,13 @@ async function ingresarCopia() {
 
   document.getElementById('btnIngresar').disabled = true;
   try {
-    const res = await apiFetch('/firma/enviar', {
-      method: 'POST',
-      body: JSON.stringify({
+    const res = await invoke('enviar_pdf', {
+      datos: {
         nombre: firma.selNombre,
         numero, anho,
         tipo_contrato: materia,
         fecha_dia: dia, fecha_mes: mes, fecha_anio: anioF
-      })
+      }
     });
 
     if (res.estado === 'ok') {
@@ -1529,11 +1471,11 @@ async function ingresarCopia() {
         firma.archivos[firma.selIdx].ya_enviado = true;
         renderPDFs();
       }
-      const s = await apiFetch('/firma/estado-auto');
+      const s = await invoke('estado_auto');
       actualizarContadores(s.subidos || 0, s.errores || 0);
       mostrarToast('Copia ingresada correctamente', 'ok');
     } else {
-      mostrarToast(res.error || 'Error al ingresar copia', 'err');
+      mostrarToast(res.mensaje || 'Error al ingresar copia', 'err');
     }
   } catch (e) {
     mostrarToast('Error: ' + e, 'err');
@@ -1552,10 +1494,7 @@ async function seleccionarCarpetaEscaner() {
     const ruta = await window.__TAURI__.dialog.open({ directory: true });
     if (!ruta) return;
     const carpeta = Array.isArray(ruta) ? ruta[0] : ruta;
-    await apiFetch('/firma/set-carpeta', {
-      method: 'POST',
-      body: JSON.stringify({ ruta: carpeta })
-    });
+    await invoke('set_carpeta_scanner', { ruta: carpeta });
     document.getElementById('carpetaLabel').textContent = carpeta;
     await cargarListaPDFs();
   } catch (e) {
@@ -1687,29 +1626,8 @@ function cerrarModalDuplicados() {
 // Cargar base de datos desde Excel
 // ═══════════════════════════════════════════════════════════════════
 async function cargarBDDesdeExcel() {
-  try {
-    const ruta = await window.__TAURI__.dialog.open({
-      multiple: false,
-      filters: [{ name: 'Excel', extensions: ['xlsx'] }],
-      title: 'Seleccionar planilla de base de datos',
-    });
-    if (!ruta) return;
-    const archivo = Array.isArray(ruta) ? ruta[0] : ruta;
-    mostrarToast('Cargando base de datos...', 'ok');
-    const res = await apiFetch('/firma/cargar-bd-excel', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ ruta: archivo }),
-    });
-    if (res.ok) {
-      const errMsg = res.errores?.length ? ` (${res.errores.length} filas con error)` : '';
-      mostrarToast(`${res.cargados} caso(s) cargados correctamente${errMsg}`, 'ok');
-    } else {
-      mostrarToast(`Error: ${res.error}`, 'err');
-    }
-  } catch (e) {
-    mostrarToast('Error al cargar el archivo', 'err');
-  }
+  // Función eliminada — usar "Cargar Planilla Repertorios" en su lugar
+  mostrarToast('Usa la función Cargar Planilla Repertorios', 'err');
 }
 
 // ═══════════════════════════════════════════════════════════════════
@@ -1778,7 +1696,6 @@ async function init() {
   await initApi();
   await checkLicencia();
   await checkUpdate();
-  iniciarPingBackend();
 }
 
 async function checkLicencia() {

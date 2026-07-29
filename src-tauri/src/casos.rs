@@ -43,6 +43,11 @@ pub fn listar_casos() -> Vec<Caso> {
     lista
 }
 
+/// Búsqueda interna (no es comando Tauri) usada por firma.rs
+pub fn buscar_caso_interno(numero: &str) -> Option<Caso> {
+    cargar().get(numero.trim()).cloned()
+}
+
 #[tauri::command]
 pub fn eliminar_caso(numero: String) -> bool {
     let mut mapa = cargar();

@@ -74,6 +74,11 @@ pub fn celda_como_fecha(v: &Data) -> String {
     }
 }
 
+/// Búsqueda interna (no es comando Tauri) usada por firma.rs
+pub fn buscar_repertorio_interno(numero: &str) -> Option<Registro> {
+    cargar().get(numero.trim()).cloned()
+}
+
 // ─── Resultado ───────────────────────────────────────────────────────────────
 
 #[derive(Debug, Serialize)]

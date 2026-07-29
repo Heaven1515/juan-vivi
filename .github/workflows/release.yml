@@ -1,6 +1,5 @@
 name: Release JUAN-VIVI
 
-# Se activa cuando haces: git tag v1.0.1 && git push origin v1.0.1
 on:
   push:
     tags:
@@ -10,15 +9,12 @@ jobs:
   release:
     runs-on: windows-latest
     permissions:
-      contents: write   # necesario para crear el release en GitHub
+      contents: write
 
     steps:
-      # 1 — Descargar el código
       - name: Checkout
         uses: actions/checkout@v4
 
-      # 2 — Actualizar versión en tauri.conf.json con el número del tag
-      #     Ej: tag v1.0.1 → version "1.0.1" en el instalador
       - name: Actualizar versión desde tag
         shell: pwsh
         run: |
@@ -26,33 +22,30 @@ jobs:
           $conf = Get-Content src-tauri/tauri.conf.json -Raw | ConvertFrom-Json
           $conf.version = $version
           $conf | ConvertTo-Json -Depth 20 | Set-Content src-tauri/tauri.conf.json -Encoding UTF8
-          Write-Host "Version actualizada a $version"
 
-      # 3 — Python
-      - name: Setup Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
-
-      - name: Instalar dependencias Python
-        run: pip install pyinstaller "fastapi>=0.111" "uvicorn[standard]>=0.30" PyMuPDF pytesseract Pillow openpyxl requests pydantic
-
-      # 4 — Tesseract OCR (misma ruta que en dev: C:\Program Files\Tesseract-OCR)
       - name: Instalar Tesseract OCR
         run: choco install tesseract --yes --no-progress
         shell: cmd
 
-      # 5 — Compilar sidecar Python → .exe
-      - name: Compilar sidecar Python
-        run: python -m PyInstaller server.spec --clean --noconfirm
-
-      - name: Copiar sidecar a src-tauri/binaries
+      - name: Copiar Tesseract a resources
         shell: pwsh
         run: |
-          New-Item -ItemType Directory -Force -Path src-tauri/binaries | Out-Null
-          Copy-Item "dist/juan-vivi-backend-x86_64-pc-windows-msvc.exe" "src-tauri/binaries/"
+          $src = "C:\Program Files\Tesseract-OCR"
+          $dst = "src-tauri/resources/tesseract"
+          New-Item -ItemType Directory -Force -Path "$dst/tessdata" | Out-Null
+          Copy-Item "$src/tesseract.exe" "$dst/"
+          Copy-Item "$src/*.dll" "$dst/"
+          Copy-Item "$src/tessdata/eng.traineddata" "$dst/tessdata/"
 
-      # 6 — Rust + cache (evita recompilar todo en cada release)
+      - name: Descargar pdfium.dll
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path "src-tauri/resources" | Out-Null
+          $url = "https://github.com/bblanchon/pdfium-binaries/releases/latest/download/pdfium-windows-x64.tgz"
+          Invoke-WebRequest -Uri $url -OutFile "pdfium.tgz"
+          tar -xf pdfium.tgz
+          Copy-Item "lib/pdfium.dll" "src-tauri/resources/pdfium.dll"
+
       - name: Setup Rust
         uses: dtolnay/rust-toolchain@stable
 
@@ -61,8 +54,6 @@ jobs:
         with:
           workspaces: src-tauri
 
-      # 7 — Compilar Tauri, firmar y crear release
-      #     TAURI_SIGNING_PRIVATE_KEY debe estar en Settings → Secrets del repo
       - name: Build y publicar release
         uses: tauri-apps/tauri-action@v0
         env:
@@ -73,16 +64,10 @@ jobs:
           releaseName: 'JUAN-VIVI ${{ github.ref_name }}'
           releaseBody: |
             ## JUAN-VIVI ${{ github.ref_name }}
-
-            Instalador de Windows (120 MB aprox.).
-
-            > Las instalaciones existentes detectarán esta versión automáticamente
-            > al abrir el programa y se actualizarán sin intervención manual.
+            Instalador de Windows. Las instalaciones existentes se actualizarán automáticamente.
           releaseDraft: false
           prerelease: false
 
-      # 8 — Generar y subir latest.json manualmente (auto-updater Tauri v2)
-      #     tauri-action no lo genera correctamente para NSIS → lo hacemos aquí
       - name: Generar y subir latest.json
         shell: pwsh
         env:
@@ -91,15 +76,9 @@ jobs:
           $version = "${{ github.ref_name }}" -replace '^v', ''
           $tag     = "${{ github.ref_name }}"
           $bundle  = "src-tauri/target/release/bundle/nsis"
-
-          # Leer firma del .nsis.zip.sig
           $sigPath = "$bundle/JUAN-VIVI_${version}_x64-setup.nsis.zip.sig"
           $sig     = (Get-Content $sigPath -Raw).Trim()
-
-          # URL de descarga del paquete de actualización
           $url = "https://github.com/Heaven1515/juan-vivi/releases/download/${tag}/JUAN-VIVI_${version}_x64-setup.nsis.zip"
-
-          # Construir latest.json (formato Tauri v2)
           $json = [ordered]@{
             version  = $version
             notes    = "JUAN-VIVI $tag"
@@ -112,12 +91,4 @@ jobs:
             }
           } | ConvertTo-Json -Depth 5
           $json | Set-Content "latest.json" -Encoding UTF8
-          Write-Host "latest.json generado:"
-          Write-Host $json
-
-          # Subir latest.json y archivos del updater al release
-          gh release upload $tag `
-            "latest.json" `
-            "$bundle/JUAN-VIVI_${version}_x64-setup.nsis.zip" `
-            "$bundle/JUAN-VIVI_${version}_x64-setup.nsis.zip.sig" `
-            --clobber
+          gh release upload $tag "latest.json" "$bundle/JUAN-VIVI_${version}_x64-setup.nsis.zip" "$bundle/JUAN-VIVI_${version}_x64-setup.nsis.zip.sig" --clobber

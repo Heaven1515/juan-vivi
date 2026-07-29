@@ -8,7 +8,10 @@
   "bundle": {
     "active": true,
     "targets": "nsis",
-    "externalBin": ["binaries/juan-vivi-backend"],
+    "resources": {
+      "resources/pdfium.dll": "pdfium.dll",
+      "resources/tesseract": "tesseract"
+    },
     "windows": {
       "nsis": {}
     }
