@@ -1004,6 +1004,17 @@
   </div>
 </div>
 
+<!-- Banner: backend caído -->
+<div id="bannerBackend" style="
+  display:none;position:fixed;top:0;left:0;right:0;z-index:99999;
+  background:linear-gradient(90deg,#7f1d1d,#991b1b);
+  color:#fff;font-family:'Plus Jakarta Sans',sans-serif;font-size:13px;font-weight:600;
+  padding:10px 20px;text-align:center;letter-spacing:.3px;
+  box-shadow:0 2px 12px rgba(0,0,0,0.4);
+">
+  ⚠ Motor interno no disponible — reconectando…
+</div>
+
 <div id="toast" class="aviso hidden"></div>
 
 <script>
@@ -1039,6 +1050,30 @@ async function apiFetch(path, opts) {
   const merged = Object.assign({}, defaultOpts, opts);
   const res = await fetch(url, merged);
   return res.json();
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// Healthcheck — detecta si el backend cayó y lo muestra en banner
+// ═══════════════════════════════════════════════════════════════════
+let _backendCaido = false;
+
+async function pingBackend() {
+  try {
+    await fetch(API_BASE + '/ping', { signal: AbortSignal.timeout(3000) });
+    if (_backendCaido) {
+      _backendCaido = false;
+      document.getElementById('bannerBackend').style.display = 'none';
+    }
+  } catch (_) {
+    if (!_backendCaido) {
+      _backendCaido = true;
+      document.getElementById('bannerBackend').style.display = 'block';
+    }
+  }
+}
+
+function iniciarPingBackend() {
+  setInterval(pingBackend, 15000);
 }
 
 // ═══════════════════════════════════════════════════════════════════
@@ -1764,6 +1799,7 @@ async function init() {
   await initApi();
   await checkLicencia();
   await checkUpdate();
+  iniciarPingBackend();
 }
 
 async function checkLicencia() {

@@ -292,6 +292,12 @@ def reemplazar_repertorio_ep(body: ReemplazarRepertorioBody):
         return {"ok": False, "error": str(e)}
 
 
+# ── Healthcheck ──────────────────────────────────────────────────────────────
+@app.get("/ping")
+def ping():
+    return {"ok": True}
+
+
 # ── Licencia ─────────────────────────────────────────────────────────────────
 @app.get("/licencia")
 def get_licencia():
