@@ -3,7 +3,6 @@ use std::sync::{Arc, Mutex};
 use serde::{Deserialize, Serialize};
 use tauri::{AppHandle, Manager, State};
 
-use crate::modelos::Caso;
 use crate::{ocr, vigilador};
 
 // ─── Structs públicos ─────────────────────────────────────────────────────────
@@ -51,6 +50,17 @@ pub struct EstadoAutoResult {
     pub errores: usize,
 }
 
+/// Datos del repertorio encontrados en BD — retornados al frontend para auto-fill del formulario
+#[derive(Debug, Clone, Serialize)]
+pub struct ResultadoBusqueda {
+    pub numero: String,
+    pub anho: String,
+    pub tipo_contrato: String,
+    pub fecha_dia: u32,
+    pub fecha_mes: u32,
+    pub fecha_anio: u32,
+}
+
 // ─── Estado ──────────────────────────────────────────────────────────────────
 
 pub struct EstadoFirma {
@@ -71,7 +81,7 @@ impl Default for EstadoFirma {
 
 // ─── Funciones privadas ───────────────────────────────────────────────────────
 
-fn _buscar_datos(numero: &str) -> Option<Caso> {
+fn _buscar_datos(numero: &str) -> Option<ResultadoBusqueda> {
     // Normalizar número OCR antes de buscar (quita O→0, l→1, puntos, espacios)
     let num_norm = crate::ocr::normalizar_numero(numero);
     let buscar = if num_norm.is_empty() { numero } else { &num_norm };
@@ -96,7 +106,7 @@ fn _buscar_datos(numero: &str) -> Option<Caso> {
         return None;
     }
 
-    Some(Caso {
+    Some(ResultadoBusqueda {
         numero: reg.repertorio,
         anho: anio_str.to_string(),
         tipo_contrato: reg.materia,
@@ -200,7 +210,7 @@ pub async fn _callback_auto(
     let anho = datos_ocr.anho.clone().unwrap_or_default();
 
     // 3. Buscar datos en BD
-    let caso = match _buscar_datos(&numero) {
+    let datos_bd = match _buscar_datos(&numero) {
         Some(c) => c,
         None => {
             let mut g = estado.lock().unwrap();
@@ -226,20 +236,20 @@ pub async fn _callback_auto(
 
     let datos_envio = DatosEnvio {
         nombre: nombre.clone(),
-        numero: caso.numero.clone(),
-        anho: caso.anho.clone(),
-        tipo_contrato: caso.tipo_contrato.clone(),
-        fecha_dia: caso.fecha_dia,
-        fecha_mes: caso.fecha_mes,
-        fecha_anio: caso.fecha_anio,
+        numero: datos_bd.numero.clone(),
+        anho: datos_bd.anho.clone(),
+        tipo_contrato: datos_bd.tipo_contrato.clone(),
+        fecha_dia: datos_bd.fecha_dia,
+        fecha_mes: datos_bd.fecha_mes,
+        fecha_anio: datos_bd.fecha_anio,
     };
 
     let entrada = match enviar_pdf_interno(&carpeta, &datos_envio).await {
         Ok(e) => e,
         Err(e) => EntradaLog {
             nombre: nombre.clone(),
-            repertorio: format!("{}-{}", caso.numero, caso.anho),
-            tipo: caso.tipo_contrato.clone(),
+            repertorio: format!("{}-{}", datos_bd.numero, datos_bd.anho),
+            tipo: datos_bd.tipo_contrato.clone(),
             estado: "error".to_string(),
             mensaje: e,
         },
@@ -407,6 +417,12 @@ pub fn estado_auto(state: State<'_, Arc<Mutex<EstadoFirma>>>) -> EstadoAutoResul
 pub fn get_log_firma(state: State<'_, Arc<Mutex<EstadoFirma>>>) -> Vec<EntradaLog> {
     let g = state.lock().unwrap();
     g.log.iter().cloned().rev().collect()
+}
+
+/// Busca datos de un repertorio en la BD para auto-fill del formulario de firma
+#[tauri::command]
+pub fn buscar_datos_firma(numero: String) -> Option<ResultadoBusqueda> {
+    _buscar_datos(&numero)
 }
 
 fn _estado_auto_result(g: &EstadoFirma) -> EstadoAutoResult {

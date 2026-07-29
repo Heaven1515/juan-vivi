@@ -1,17 +1,5 @@
 use serde::{Deserialize, Serialize};
 
-// ─── Casos ───────────────────────────────────────────────────────────────────
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct Caso {
-    pub numero: String,
-    pub anho: String,
-    pub tipo_contrato: String,
-    pub fecha_dia: u32,
-    pub fecha_mes: u32,
-    pub fecha_anio: u32,
-}
-
 // ─── Repertorios ─────────────────────────────────────────────────────────────
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

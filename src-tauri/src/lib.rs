@@ -24,11 +24,6 @@ pub fn run() {
         .manage(Mutex::new(modelos::EstadoPlanilla::default()))
         .manage(Arc::new(Mutex::new(firma::EstadoFirma::default())))
         .invoke_handler(tauri::generate_handler![
-            // Casos
-            casos::buscar_caso,
-            casos::agregar_caso,
-            casos::listar_casos,
-            casos::eliminar_caso,
             // Licencia
             licencia::verificar_licencia,
             // Repertorios
@@ -48,6 +43,7 @@ pub fn run() {
             firma::toggle_auto,
             firma::estado_auto,
             firma::get_log_firma,
+            firma::buscar_datos_firma,
         ])
         .run(tauri::generate_context!())
         .expect("error al iniciar JUAN-VIVI");

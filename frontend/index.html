@@ -872,13 +872,6 @@
 
             <!-- Botones base de datos -->
             <div style="display:flex;flex-direction:column;gap:8px">
-              <button class="btn-prim" style="height:42px;border-radius:21px;font-size:13px"
-                      onclick="abrirModalAgregarCaso()">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
-                </svg>
-                Agregar escritura a base de datos
-              </button>
               <button onclick="cargarBDDesdeExcel()"
                       style="height:42px;border-radius:21px;font-size:13px;display:inline-flex;align-items:center;justify-content:center;gap:8px;border:1px solid rgba(111,157,255,0.35);background:rgba(111,157,255,0.1);color:#a8c0ff;cursor:pointer;font-family:inherit;font-weight:600;transition:background 0.14s"
                       onmouseover="this.style.background='rgba(111,157,255,0.2)'"
@@ -921,49 +914,6 @@
       </div>
 
     </main>
-  </div>
-</div>
-
-<!-- Modal: agregar escritura manualmente -->
-<div id="modalAgregar" class="modal-overlay hidden" onclick="if(event.target===this)cerrarModalAgregarCaso()">
-  <div class="modal-box">
-    <div class="modal-title">Agregar escritura a base de datos</div>
-
-    <div style="display:grid;grid-template-columns:1fr 88px;gap:8px;align-items:center">
-      <div>
-        <div class="lbl">N° Repertorio</div>
-        <input class="inp inp-pill inp-mono" id="mRepNum" placeholder="Ej: 9739" style="margin-top:6px">
-      </div>
-      <div>
-        <div class="lbl">Año</div>
-        <input class="inp inp-pill inp-mono" id="mRepAnio" value="2026" style="margin-top:6px;text-align:center">
-      </div>
-    </div>
-
-    <div>
-      <div class="lbl">Tipo de contrato / materia</div>
-      <input class="inp" style="border-radius:11px;margin-top:6px" id="mMateria"
-             placeholder="Ej: ALZAMIENTO DE PRENDA Y PROHIBICION">
-    </div>
-
-    <div>
-      <div class="lbl">Fecha de la escritura</div>
-      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:6px">
-        <input class="inp inp-pill inp-mono" id="mDia"  placeholder="Día"  style="text-align:center">
-        <input class="inp inp-pill inp-mono" id="mMes"  placeholder="Mes"  style="text-align:center">
-        <input class="inp inp-pill inp-mono" id="mAnio" placeholder="Año"  style="text-align:center">
-      </div>
-    </div>
-
-    <div style="display:flex;gap:10px;margin-top:4px">
-      <button class="btn-prim" style="flex:1;height:44px;border-radius:22px" onclick="guardarCasoManual()">
-        Guardar
-      </button>
-      <button onclick="cerrarModalAgregarCaso()"
-              style="flex:1;height:44px;border-radius:22px;border:1px solid #dde3ef;background:none;cursor:pointer;font-size:14px;color:#374268">
-        Cancelar
-      </button>
-    </div>
   </div>
 </div>
 
@@ -1371,10 +1321,10 @@ function onRepNumInput(valor) {
 
 async function buscarRepertorio(numero) {
   try {
-    const caso = await invoke('buscar_caso', { numero });
-    if (!caso) return;   // no está en BD — el usuario llena manualmente
-    _rellenarFormFirma(caso);
-    mostrarToast(`Repertorio ${numero} encontrado`, 'ok');
+    const datos = await invoke('buscar_datos_firma', { numero });
+    if (!datos) return;   // no está en BD — el usuario llena manualmente
+    _rellenarFormFirma(datos);
+    mostrarToast(`Repertorio ${numero} encontrado en BD`, 'ok');
   } catch (e) { /* silencioso */ }
 }
 
@@ -1628,54 +1578,6 @@ function cerrarModalDuplicados() {
 async function cargarBDDesdeExcel() {
   // Función eliminada — usar "Cargar Planilla Repertorios" en su lugar
   mostrarToast('Usa la función Cargar Planilla Repertorios', 'err');
-}
-
-// ═══════════════════════════════════════════════════════════════════
-// Modal: agregar escritura manualmente
-// ═══════════════════════════════════════════════════════════════════
-
-function abrirModalAgregarCaso() {
-  // Limpiar campos
-  ['mRepNum','mRepAnio','mMateria','mDia','mMes','mAnio'].forEach(id => {
-    const el = document.getElementById(id);
-    if (el.id === 'mRepAnio') el.value = '2026';
-    else el.value = '';
-  });
-  document.getElementById('modalAgregar').classList.remove('hidden');
-  document.getElementById('mRepNum').focus();
-}
-
-function cerrarModalAgregarCaso() {
-  document.getElementById('modalAgregar').classList.add('hidden');
-}
-
-async function guardarCasoManual() {
-  const numero  = document.getElementById('mRepNum').value.trim();
-  const anho    = document.getElementById('mRepAnio').value.trim();
-  const materia = document.getElementById('mMateria').value.trim();
-  const dia     = document.getElementById('mDia').value.trim();
-  const mes     = document.getElementById('mMes').value.trim();
-  const anioF   = document.getElementById('mAnio').value.trim();
-
-  if (!numero || !anho || !materia || !dia || !mes || !anioF) {
-    return mostrarToast('Completa todos los campos', 'err');
-  }
-
-  try {
-    await invoke('agregar_caso', {
-      caso: {
-        numero, anho,
-        tipo_contrato: materia,
-        fecha_dia: parseInt(dia),
-        fecha_mes: parseInt(mes),
-        fecha_anio: parseInt(anioF)
-      }
-    });
-    mostrarToast(`Escritura ${numero}-${anho} guardada`, 'ok');
-    cerrarModalAgregarCaso();
-  } catch (e) {
-    mostrarToast('Error al guardar: ' + e, 'err');
-  }
 }
 
 // ═══════════════════════════════════════════════════════════════════
