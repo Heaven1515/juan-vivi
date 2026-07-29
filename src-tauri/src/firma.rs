@@ -76,12 +76,7 @@ fn _buscar_datos(numero: &str) -> Option<Caso> {
     let num_norm = crate::ocr::normalizar_numero(numero);
     let buscar = if num_norm.is_empty() { numero } else { &num_norm };
 
-    // 1. Buscar en casos.json (flexible: exacto o solo-dígitos)
-    if let Some(caso) = crate::casos::buscar_caso_flexible(buscar) {
-        return Some(caso);
-    }
-
-    // 2. Buscar en repertorios.json y convertir
+    // Buscar en repertorios.json (BD histórica, fuente única de verdad)
     let reg = crate::repertorios::buscar_repertorio_flexible(buscar)?;
 
     // Convertir fecha "YYYY-MM-DD"
