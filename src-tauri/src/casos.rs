@@ -43,9 +43,19 @@ pub fn listar_casos() -> Vec<Caso> {
     lista
 }
 
-/// Búsqueda interna (no es comando Tauri) usada por firma.rs
-pub fn buscar_caso_interno(numero: &str) -> Option<Caso> {
-    cargar().get(numero.trim()).cloned()
+/// Búsqueda flexible: primero exacta, luego comparando solo dígitos.
+/// Maneja diferencias de formato entre lo guardado ("3.090") y lo que devuelve el OCR ("3090").
+pub fn buscar_caso_flexible(numero: &str) -> Option<Caso> {
+    let mapa = cargar();
+    let clave = numero.trim();
+    // 1. Exacta
+    if let Some(c) = mapa.get(clave) {
+        return Some(c.clone());
+    }
+    // 2. Comparar solo dígitos (ignora puntos, espacios, O→0 del OCR)
+    let norm: String = clave.chars().filter(|c| c.is_ascii_digit()).collect();
+    mapa.into_values()
+        .find(|c| c.numero.chars().filter(|ch| ch.is_ascii_digit()).collect::<String>() == norm)
 }
 
 #[tauri::command]

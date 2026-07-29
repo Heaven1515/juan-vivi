@@ -74,9 +74,19 @@ pub fn celda_como_fecha(v: &Data) -> String {
     }
 }
 
-/// Búsqueda interna (no es comando Tauri) usada por firma.rs
-pub fn buscar_repertorio_interno(numero: &str) -> Option<Registro> {
-    cargar().get(numero.trim()).cloned()
+/// Búsqueda flexible: primero exacta, luego comparando solo dígitos.
+/// Maneja diferencias entre clave guardada ("3.090") y número OCR ("3090").
+pub fn buscar_repertorio_flexible(numero: &str) -> Option<Registro> {
+    let mapa = cargar();
+    let clave = numero.trim();
+    // 1. Exacta
+    if let Some(r) = mapa.get(clave) {
+        return Some(r.clone());
+    }
+    // 2. Comparar solo dígitos
+    let norm: String = clave.chars().filter(|c| c.is_ascii_digit()).collect();
+    mapa.into_values()
+        .find(|r| r.repertorio.chars().filter(|ch| ch.is_ascii_digit()).collect::<String>() == norm)
 }
 
 // ─── Resultado ───────────────────────────────────────────────────────────────

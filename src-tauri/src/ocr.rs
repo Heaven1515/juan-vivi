@@ -175,6 +175,19 @@ fn ocr_primera_pagina(
     Ok(texto)
 }
 
+/// Limpia un número de repertorio extraído por OCR:
+/// quita puntos/espacios y corrige confusiones típicas de Tesseract (O→0, l/I→1).
+pub fn normalizar_numero(s: &str) -> String {
+    s.chars()
+        .map(|c| match c {
+            'O' | 'o' => '0',
+            'l' | 'I' => '1',
+            _ => c,
+        })
+        .filter(|c| c.is_ascii_digit())
+        .collect()
+}
+
 fn extraer_repertorio(texto: &str) -> (Option<String>, Option<String>) {
     // Solo buscar en el primer cuarto del texto — el repertorio siempre aparece arriba
     let lineas: Vec<&str> = texto.lines().collect();
@@ -182,11 +195,11 @@ fn extraer_repertorio(texto: &str) -> (Option<String>, Option<String>) {
     let zona = lineas[..limite].join("\n");
 
     if let Some(cap) = RE_REPERTORIO.captures(&zona) {
-        let numero = cap.get(1)
-            .map(|m| m.as_str().replace('.', ""))
-            .unwrap_or_default();
+        let raw = cap.get(1).map(|m| m.as_str()).unwrap_or("");
+        // Normalizar: quitar puntos, corregir O→0 y l/I→1
+        let numero = normalizar_numero(raw);
         let anho = cap.get(2).map(|m| m.as_str().to_string());
-        (Some(numero), anho)
+        if numero.is_empty() { (None, anho) } else { (Some(numero), anho) }
     } else {
         (None, None)
     }
