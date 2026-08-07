@@ -1,6 +1,6 @@
 {
   "productName": "JUAN-VIVI",
-  "version": "2.2.1",
+  "version": "2.2.4",
   "identifier": "cl.notaria33.juan-vivi",
   "build": {
     "frontendDist": "../frontend"
@@ -8,6 +8,7 @@
   "bundle": {
     "active": true,
     "targets": "nsis",
+    "createUpdaterArtifacts": true,
     "resources": {
       "resources/pdfium.dll": "pdfium.dll",
       "resources/tesseract": "tesseract"
