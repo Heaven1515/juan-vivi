@@ -46,7 +46,7 @@ jobs:
           $url = $asset.browser_download_url
           Invoke-WebRequest -Uri $url -OutFile "pdfium.tgz"
           tar -xf pdfium.tgz
-          Copy-Item "lib/pdfium.dll" "src-tauri/resources/pdfium.dll"
+          Copy-Item "bin/pdfium.dll" "src-tauri/resources/pdfium.dll"
 
       - name: Setup Rust
         uses: dtolnay/rust-toolchain@stable
