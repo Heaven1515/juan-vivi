@@ -41,7 +41,9 @@ jobs:
         shell: pwsh
         run: |
           New-Item -ItemType Directory -Force -Path "src-tauri/resources" | Out-Null
-          $url = "https://github.com/bblanchon/pdfium-binaries/releases/latest/download/pdfium-windows-x64.tgz"
+          $release = Invoke-RestMethod -Uri "https://api.github.com/repos/bblanchon/pdfium-binaries/releases/latest"
+          $asset = $release.assets | Where-Object { $_.name -eq "pdfium-win-x64.tgz" }
+          $url = $asset.browser_download_url
           Invoke-WebRequest -Uri $url -OutFile "pdfium.tgz"
           tar -xf pdfium.tgz
           Copy-Item "lib/pdfium.dll" "src-tauri/resources/pdfium.dll"
