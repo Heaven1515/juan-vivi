@@ -70,27 +70,3 @@ jobs:
           releaseDraft: false
           prerelease: false
 
-      - name: Generar y subir latest.json
-        shell: pwsh
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          $version = "${{ github.ref_name }}" -replace '^v', ''
-          $tag     = "${{ github.ref_name }}"
-          $bundle  = "src-tauri/target/release/bundle/nsis"
-          $sigPath = "$bundle/JUAN-VIVI_${version}_x64-setup.nsis.zip.sig"
-          $sig     = (Get-Content $sigPath -Raw).Trim()
-          $url = "https://github.com/Heaven1515/juan-vivi/releases/download/${tag}/JUAN-VIVI_${version}_x64-setup.nsis.zip"
-          $json = [ordered]@{
-            version  = $version
-            notes    = "JUAN-VIVI $tag"
-            pub_date = (Get-Date -Format "yyyy-MM-ddTHH:mm:ssZ")
-            platforms = [ordered]@{
-              "windows-x86_64" = [ordered]@{
-                signature = $sig
-                url       = $url
-              }
-            }
-          } | ConvertTo-Json -Depth 5
-          $json | Set-Content "latest.json" -Encoding UTF8
-          gh release upload $tag "latest.json" "$bundle/JUAN-VIVI_${version}_x64-setup.nsis.zip" "$bundle/JUAN-VIVI_${version}_x64-setup.nsis.zip.sig" --clobber
