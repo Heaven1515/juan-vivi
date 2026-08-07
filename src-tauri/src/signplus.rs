@@ -4,8 +4,8 @@ use reqwest::Client;
 
 const URL_BASE: &str = "http://192.168.1.177";
 const URL_API: &str = "http://192.168.1.177/app/escrituras_publicas/api/";
-const USUARIO: &str = "JESPINA";
-const PASSWORD: &str = "Cpina2026";
+const USUARIO: &str = "JRIOS";
+const PASSWORD: &str = "Cpina2028";
 
 const MESES: [&str; 12] = [
     "enero", "febrero", "marzo", "abril", "mayo", "junio",

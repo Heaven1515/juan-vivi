@@ -1,6 +1,6 @@
 {
   "productName": "JUAN-VIVI",
-  "version": "1.0.0",
+  "version": "2.2.1",
   "identifier": "cl.notaria33.juan-vivi",
   "build": {
     "frontendDist": "../frontend"

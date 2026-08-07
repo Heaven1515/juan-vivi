@@ -128,15 +128,27 @@ pub fn cargar_repertorios_excel(ruta: String) -> ResultadoRepertorios {
     }
 }
 
+/// Detecta si el rango corresponde al "MODELO PARA BASE DE DATOS":
+/// sus encabezados reales están en fila 2 (índice 1) con "OT" en col 1 y "Repertorio" en col 2.
+fn es_modelo_bd(rango: &calamine::Range<Data>) -> bool {
+    if let Some(fila) = rango.rows().nth(1) {
+        let col1 = fila.get(1).map(celda_como_str).unwrap_or_default();
+        let col2 = fila.get(2).map(celda_como_str).unwrap_or_default();
+        return col1.to_lowercase() == "ot" && col2.to_lowercase() == "repertorio";
+    }
+    false
+}
+
 fn intentar_cargar_excel(ruta: &str) -> anyhow::Result<ResultadoRepertorios> {
     let mut wb = open_workbook_auto(ruta)?;
 
-    // Buscar hoja "Exportar" (case-insensitive) o usar la primera
+    // Buscar hoja "Exportar" (case-insensitive) o "Resultado" o usar la primera
     let nombres = wb.sheet_names().to_vec();
     let nombre_hoja = nombres
         .iter()
         .find(|n| n.to_lowercase() == "exportar")
         .cloned()
+        .or_else(|| nombres.iter().find(|n| n.to_lowercase() == "resultado").cloned())
         .or_else(|| nombres.first().cloned())
         .ok_or_else(|| anyhow::anyhow!("El Excel no tiene hojas"))?;
 
@@ -147,44 +159,75 @@ fn intentar_cargar_excel(ruta: &str) -> anyhow::Result<ResultadoRepertorios> {
     let mut duplicados: Vec<Duplicado> = vec![];
     let errores: Vec<String> = vec![];
 
-    for fila in rango.rows().skip(1) {
-        // col 2 = Repertorio; si vacía, saltar
-        let repertorio = match fila.get(2) {
-            Some(v) => {
-                let s = celda_como_str(v);
-                if s.is_empty() {
-                    continue;
+    if es_modelo_bd(&rango) {
+        // ── Formato MODELO PARA BASE DE DATOS ──────────────────────────────
+        // Encabezados en fila 2 (índice 1), datos desde fila 3 (índice 2)
+        // col 1=OT, col 2=Repertorio, col 3=Fecha, col 9=RUT C2,
+        // col 10=Apellido Paterno C2, col 11=Apellido Materno C2, col 12=Nombre C2
+        for fila in rango.rows().skip(2) {
+            let repertorio = match fila.get(2) {
+                Some(v) => {
+                    let s = celda_como_str(v);
+                    if s.is_empty() { continue; }
+                    s
                 }
-                s
+                None => continue,
+            };
+
+            let ot = fila.get(1).map(celda_como_str).unwrap_or_default();
+            let fecha = fila.get(3).map(celda_como_fecha).unwrap_or_default();
+            let cliente = fila.get(9).map(celda_como_str).unwrap_or_default();
+            let materia = String::new();
+            // Compareciente 2: apellido paterno + apellido materno + nombre
+            let ap = fila.get(10).map(celda_como_str).unwrap_or_default();
+            let am = fila.get(11).map(celda_como_str).unwrap_or_default();
+            let nm = fila.get(12).map(celda_como_str).unwrap_or_default();
+            let compareciente = [ap, am, nm]
+                .iter()
+                .filter(|s| !s.is_empty())
+                .cloned()
+                .collect::<Vec<_>>()
+                .join(" ")
+                .trim()
+                .to_string();
+
+            let entrante = Registro { repertorio: repertorio.clone(), ot, fecha, cliente, materia, compareciente };
+
+            if let Some(existente) = mapa.get(&repertorio) {
+                duplicados.push(Duplicado { numero: repertorio.clone(), existente: existente.clone(), entrante });
+            } else {
+                mapa.insert(repertorio, entrante);
+                cargados += 1;
             }
-            None => continue,
-        };
+        }
+    } else {
+        // ── Formato AUTOFIN SP (original) ──────────────────────────────────
+        // col 0=OT, col 2=Repertorio, col 3=Fecha, col 5=Cliente, col 7=Materia, col 8=Compareciente
+        for fila in rango.rows().skip(1) {
+            let repertorio = match fila.get(2) {
+                Some(v) => {
+                    let s = celda_como_str(v);
+                    if s.is_empty() { continue; }
+                    s
+                }
+                None => continue,
+            };
 
-        let ot = fila.get(0).map(celda_como_str).unwrap_or_default();
-        let fecha = fila.get(3).map(celda_como_fecha).unwrap_or_default();
-        let cliente = fila.get(5).map(celda_como_str).unwrap_or_default();
-        let materia = fila.get(7).map(celda_como_str).unwrap_or_default();
-        let comp_raw = fila.get(8).map(celda_como_str).unwrap_or_default();
-        let compareciente = extraer_compareciente(&comp_raw);
+            let ot = fila.get(0).map(celda_como_str).unwrap_or_default();
+            let fecha = fila.get(3).map(celda_como_fecha).unwrap_or_default();
+            let cliente = fila.get(5).map(celda_como_str).unwrap_or_default();
+            let materia = fila.get(7).map(celda_como_str).unwrap_or_default();
+            let comp_raw = fila.get(8).map(celda_como_str).unwrap_or_default();
+            let compareciente = extraer_compareciente(&comp_raw);
 
-        let entrante = Registro {
-            repertorio: repertorio.clone(),
-            ot,
-            fecha,
-            cliente,
-            materia,
-            compareciente,
-        };
+            let entrante = Registro { repertorio: repertorio.clone(), ot, fecha, cliente, materia, compareciente };
 
-        if let Some(existente) = mapa.get(&repertorio) {
-            duplicados.push(Duplicado {
-                numero: repertorio.clone(),
-                existente: existente.clone(),
-                entrante,
-            });
-        } else {
-            mapa.insert(repertorio, entrante);
-            cargados += 1;
+            if let Some(existente) = mapa.get(&repertorio) {
+                duplicados.push(Duplicado { numero: repertorio.clone(), existente: existente.clone(), entrante });
+            } else {
+                mapa.insert(repertorio, entrante);
+                cargados += 1;
+            }
         }
     }
 
