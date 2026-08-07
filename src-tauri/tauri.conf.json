@@ -35,7 +35,7 @@
   },
   "plugins": {
     "updater": {
-      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDg4RTI1QTYxQUNDNENFMTMKUldRVHpzU3NZVnJpaUhvcGQ1TXRWV09YSkhsVkVGNi96TEZzOVBwV1NHQ3NwZjJ6WVU3Y1pJN08K",
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDc2MTc5NzVDQTg3QzZBNzUKUldSMWFueW9YSmNYZHFnSkpEVmxkb0ZhV1N3VE0xbnFhUVIyYldMMmF0SzVwNVA4U1hSYmZpZncK",
       "endpoints": [
         "https://github.com/Heaven1515/juan-vivi/releases/latest/download/latest.json"
       ],
