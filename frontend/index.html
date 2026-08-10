@@ -294,6 +294,7 @@
     }
     .btn-prim:hover { transform: translateY(-1px); }
     .btn-prim:disabled { background: #9db7ee; box-shadow: none; cursor: default; }
+    #btnGenerar:disabled { background: #9db7ee !important; box-shadow: none !important; cursor: default !important; transform: none !important; }
 
     .btn-sec {
       height: 44px;
@@ -313,7 +314,7 @@
     .btn-icon {
       width: 34px;
       height: 34px;
-      border-radius: 11px;
+      border-radius: 50%;
       border: 1px solid #e6eaf2;
       background: #fff;
       color: #6b7280;
@@ -713,8 +714,37 @@
       <!-- ═══════════ VISTA: REPERTORIOS ═══════════ -->
       <div id="v-repertorios" class="vista">
 
-        <!-- Fila superior: 3 tarjetas -->
-        <div class="g3">
+        <!-- Barra de acciones -->
+        <div class="sec" style="padding:14px 20px;display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+          <button onclick="abrirYCargarExcel()"
+                  style="display:inline-flex;align-items:center;gap:9px;height:44px;padding:0 26px;border-radius:22px;border:0;cursor:pointer;font-size:14px;font-weight:700;font-family:inherit;color:#fff;background:linear-gradient(135deg,#0ea5e9,#0369a1);box-shadow:0 8px 20px rgba(3,105,161,0.35);transition:transform 0.14s,box-shadow 0.14s"
+                  onmouseover="this.style.transform='translateY(-1px)'" onmouseout="this.style.transform='translateY(0)'">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8zM14 3v5h5"/>
+            </svg>
+            Cargar Excel
+          </button>
+          <button onclick="generarPlanilla()" id="btnGenerar" disabled
+                  style="display:inline-flex;align-items:center;gap:9px;height:44px;padding:0 26px;border-radius:22px;border:0;cursor:pointer;font-size:14px;font-weight:700;font-family:inherit;color:#fff;background:linear-gradient(135deg,#4d81ff,#1741b8);box-shadow:0 8px 20px rgba(23,65,184,0.35);transition:transform 0.14s,box-shadow 0.14s">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 3v12M8 11l4 4 4-4M3 18h18"/>
+            </svg>
+            Generar planilla
+          </button>
+          <div style="flex:1"></div>
+          <button onclick="cargarPlanillaRepertorios()"
+                  style="display:inline-flex;align-items:center;gap:9px;height:44px;padding:0 26px;border-radius:22px;border:0;cursor:pointer;font-size:14px;font-weight:700;font-family:inherit;color:#fff;background:linear-gradient(135deg,#22c55e,#15803d);box-shadow:0 8px 20px rgba(21,128,61,0.35);transition:transform 0.14s,box-shadow 0.14s"
+                  onmouseover="this.style.transform='translateY(-1px)'" onmouseout="this.style.transform='translateY(0)'">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+              <polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
+            </svg>
+            Cargar Repertorios
+          </button>
+        </div>
+
+        <!-- KPI cards: 2 columnas -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:18px">
           <div class="sec" style="padding:20px">
             <div class="lbl">Planilla de origen</div>
             <div class="mono" id="excelNombre"
@@ -723,32 +753,12 @@
             </div>
             <div id="excelMeta" style="font-size:12px;color:#6b7280;margin-top:4px">—</div>
           </div>
-
           <div class="sec" style="padding:20px">
             <div class="lbl">Clientes encontrados</div>
             <div class="mono" id="excelFilas"
                  style="font-size:30px;font-weight:700;letter-spacing:-1px;margin-top:8px;line-height:1">
               —
             </div>
-          </div>
-
-          <div class="sec" style="padding:20px;display:flex;flex-direction:column;gap:10px;justify-content:center">
-            <button class="btn-prim" onclick="generarPlanilla()" id="btnGenerar" disabled>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M12 3v12M8 11l4 4 4-4M3 18h18"/>
-              </svg>
-              Generar planilla
-            </button>
-            <button class="btn-sec" onclick="abrirYCargarExcel()">Cargar Excel</button>
-            <button onclick="cargarPlanillaRepertorios()"
-                    style="display:inline-flex;align-items:center;justify-content:center;gap:8px;height:40px;border-radius:12px;border:0;cursor:pointer;font-size:13px;font-weight:700;font-family:inherit;color:#fff;background:linear-gradient(135deg,#16a34a,#15803d);box-shadow:0 6px 16px rgba(22,163,74,0.3);transition:opacity 0.14s"
-                    onmouseover="this.style.opacity='0.88'" onmouseout="this.style.opacity='1'">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-                <polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
-              </svg>
-              Cargar base de datos
-            </button>
           </div>
         </div>
 
@@ -788,6 +798,7 @@
             Sin resultados para la búsqueda actual
           </div>
         </div>
+
       </div>
 
       <!-- ═══════════ VISTA: FIRMA ELECTRÓNICA ═══════════ -->
@@ -818,6 +829,12 @@
               <div class="ctr-lbl">Errores hoy</div>
             </div>
           </div>
+        </div>
+
+        <!-- Log automático -->
+        <div class="sec" id="logAutoPanel" style="padding:14px 18px;display:none;flex-direction:column;gap:6px">
+          <div class="lbl" style="margin-bottom:4px">Actividad modo automático</div>
+          <div id="logAutoLista" style="display:flex;flex-direction:column;gap:4px;max-height:180px;overflow-y:auto;font-size:12px;font-family:monospace"></div>
         </div>
 
         <!-- Preview + panel derecho -->
@@ -870,20 +887,6 @@
               </button>
             </div>
 
-            <!-- Botones base de datos -->
-            <div style="display:flex;flex-direction:column;gap:8px">
-              <button onclick="cargarBDDesdeExcel()"
-                      style="height:42px;border-radius:21px;font-size:13px;display:inline-flex;align-items:center;justify-content:center;gap:8px;border:1px solid rgba(111,157,255,0.35);background:rgba(111,157,255,0.1);color:#a8c0ff;cursor:pointer;font-family:inherit;font-weight:600;transition:background 0.14s"
-                      onmouseover="this.style.background='rgba(111,157,255,0.2)'"
-                      onmouseout="this.style.background='rgba(111,157,255,0.1)'">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-                  <polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
-                </svg>
-                Cargar base de datos desde Excel
-              </button>
-            </div>
-
             <!-- Lista PDFs -->
             <div class="sec" style="padding:20px;display:flex;flex-direction:column;gap:14px">
               <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px">
@@ -911,6 +914,7 @@
             </div>
           </div>
         </div>
+
       </div>
 
     </main>
@@ -938,21 +942,33 @@
 <!-- Modal: duplicados al cargar planilla -->
 <div id="modalDuplicados" class="modal-overlay hidden" onclick="if(event.target===this)cerrarModalDuplicados()">
   <div class="modal-box" style="width:680px;max-width:calc(100vw - 40px);max-height:80vh;overflow-y:auto">
-    <div style="display:flex;justify-content:space-between;align-items:center">
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:12px">
       <div class="modal-title" style="margin-bottom:0">Repertorios duplicados detectados</div>
-      <button onclick="cerrarModalDuplicados()"
-              style="background:none;border:none;cursor:pointer;font-size:24px;line-height:1;color:#9aa2b1;padding:0 4px">&times;</button>
+      <div style="display:flex;gap:8px;flex-shrink:0;align-items:center">
+        <button onclick="reemplazarTodosDuplicados()"
+                style="height:36px;border-radius:18px;border:none;background:#374268;cursor:pointer;font-size:13px;color:#fff;font-family:inherit;font-weight:600;padding:0 18px;white-space:nowrap">
+          Reemplazar todos
+        </button>
+        <button onclick="cerrarModalDuplicados()"
+                style="background:none;border:none;cursor:pointer;font-size:24px;line-height:1;color:#9aa2b1;padding:0 4px">&times;</button>
+      </div>
     </div>
     <div style="font-size:12.5px;color:#6b7280;margin-top:-6px">
-      Estos repertorios ya existen en la base de datos. Revisa cada uno y decide si reemplazas el registro existente.
+      Estos repertorios ya existen en la base de datos. Revisa cada uno o usa "Reemplazar todos".
     </div>
     <div id="dupLista" style="display:flex;flex-direction:column;gap:18px;margin-top:4px"></div>
-    <button onclick="cerrarModalDuplicados()"
-            style="height:42px;border-radius:21px;border:1px solid #dde3ef;background:none;cursor:pointer;font-size:14px;color:#374268;font-family:inherit;font-weight:600;margin-top:4px">
-      Cerrar
-    </button>
   </div>
 </div>
+
+<!-- Panel debug (toggle con botón ⚙ abajo-derecha) -->
+<div id="dbgPanel" style="display:none;position:fixed;bottom:0;right:0;width:480px;max-height:46vh;background:rgba(4,8,26,0.97);border:1px solid rgba(111,157,255,0.25);border-radius:14px 0 0 0;z-index:9999;flex-direction:column;overflow:hidden">
+  <div style="display:flex;align-items:center;justify-content:space-between;padding:7px 12px;border-bottom:1px solid rgba(111,157,255,0.15);background:rgba(111,157,255,0.07)">
+    <span style="color:#6f9dff;font-size:11px;font-family:monospace;font-weight:700">⚙ DEBUG — invoke log</span>
+    <button onclick="dbgToggle()" style="background:none;border:none;color:#9aa2b1;cursor:pointer;font-size:14px;line-height:1;padding:0 2px">✕</button>
+  </div>
+  <div id="dbgLista" style="overflow-y:auto;flex:1;padding:5px 10px;display:flex;flex-direction:column;gap:1px;font-family:monospace;font-size:10.5px"></div>
+</div>
+<button id="dbgBtn" onclick="dbgToggle()" title="Debug panel (invoke log)" style="position:fixed;bottom:14px;right:14px;width:30px;height:30px;border-radius:50%;background:rgba(8,18,52,0.85);border:1px solid rgba(111,157,255,0.3);color:#6f9dff;cursor:pointer;font-size:13px;z-index:9998;display:flex;align-items:center;justify-content:center;padding:0">⚙</button>
 
 <div id="toast" class="aviso hidden"></div>
 
@@ -960,7 +976,56 @@
 // ═══════════════════════════════════════════════════════════════════
 // Toda la lógica es ahora Rust — no hay sidecar Python
 // ═══════════════════════════════════════════════════════════════════
-const invoke = window.__TAURI__.core.invoke;
+// ─── invoke con debug panel integrado ────────────────────────────────
+const _invokeReal = window.__TAURI__.core.invoke;
+const _dbgEntradas = [];
+
+function dbgPush(tipo, cmd, args, resultado, ms) {
+  _dbgEntradas.unshift({
+    tipo, cmd,
+    argsStr: args ? JSON.stringify(args).slice(0, 150) : '',
+    resStr: resultado !== undefined ? JSON.stringify(resultado).slice(0, 400) : '',
+    ms, ts: new Date().toLocaleTimeString('es-CL', { hour:'2-digit', minute:'2-digit', second:'2-digit' }),
+  });
+  if (_dbgEntradas.length > 60) _dbgEntradas.pop();
+  const panel = document.getElementById('dbgPanel');
+  if (panel && panel.style.display === 'flex') dbgRender();
+}
+
+function dbgRender() {
+  const lista = document.getElementById('dbgLista');
+  if (!lista) return;
+  lista.innerHTML = _dbgEntradas.slice(0, 40).map(e => {
+    const c = e.tipo === 'ok' ? '#22c55e' : '#f87171';
+    return `<div style="border-bottom:1px solid rgba(255,255,255,0.04);padding:2px 0;line-height:1.45">
+      <span style="color:#6b7280">${e.ts}</span>
+      <span style="color:${c}"> [${e.tipo.toUpperCase()}]</span>
+      <span style="color:#93c5fd"> ${e.cmd}</span>
+      <span style="color:#9aa2b1">${e.argsStr ? ` (${e.argsStr})` : ''}</span>
+      <span style="color:#6b7280"> ${e.ms}ms</span>
+      ${e.resStr ? `<div style="color:#cbd5e1;padding-left:10px;opacity:0.7;word-break:break-all">${e.resStr}</div>` : ''}
+    </div>`;
+  }).join('');
+}
+
+function dbgToggle() {
+  const panel = document.getElementById('dbgPanel');
+  const visible = panel.style.display === 'flex';
+  panel.style.display = visible ? 'none' : 'flex';
+  if (!visible) dbgRender();
+}
+
+async function invoke(cmd, args) {
+  const t0 = performance.now();
+  try {
+    const res = await _invokeReal(cmd, args);
+    dbgPush('ok', cmd, args, res, (performance.now() - t0).toFixed(0));
+    return res;
+  } catch(e) {
+    dbgPush('err', cmd, args, String(e), (performance.now() - t0).toFixed(0));
+    throw e;
+  }
+}
 
 async function initApi() {
   // Toda la lógica es ahora Rust — no hay sidecar Python
@@ -978,8 +1043,8 @@ async function checkUpdate() {
     const { check } = window.__TAURI__.updater;
     const update = await check();
     if (update && update.available) {
-      mostrarToast(`Nueva version ${update.version} disponible`, 'ok');
-      await update.downloadAndInstall();
+      mostrarToast(`Nueva versión ${update.version} disponible — reinicia la app para instalar`, 'ok');
+      // No instalamos automáticamente para no pisar el build de desarrollo
     }
   } catch (e) {
     // updater no disponible en dev — ignorar
@@ -1213,8 +1278,22 @@ function iniciarPollingAuto() {
     try {
       const s = await invoke('estado_auto');
       actualizarContadores(s.subidos || 0, s.errores || 0);
+      const logs = await invoke('get_log_firma');
+      renderLogAuto(logs);
     } catch (e) { /* silencioso */ }
   }, 5000);
+}
+
+function renderLogAuto(logs) {
+  if (!logs?.length) return;
+  const panel = document.getElementById('logAutoPanel');
+  const lista = document.getElementById('logAutoLista');
+  panel.style.display = 'flex';
+  lista.innerHTML = logs.slice(0, 30).map(e => {
+    const color = e.estado === 'ok' ? '#0f7a4f' : e.estado === 'error' ? '#c0392b' : '#6b7280';
+    return `<div style="color:${color};padding:2px 0;border-bottom:1px solid #f0f2f7">[${e.estado.toUpperCase()}] ${e.nombre || ''} — ${e.mensaje || ''}</div>`;
+  }).join('');
+  lista.scrollTop = 0;
 }
 
 // ═══════════════════════════════════════════════════════════════════
@@ -1264,8 +1343,10 @@ function selPDF(idx) {
   document.getElementById('prevNombre').textContent = firma.selNombre;
   document.getElementById('prevMeta').textContent   = 'Completa el formulario y presiona Ingresar';
 
-  // Limpiar formulario para llenado manual
-  _limpiarFormFirma();
+  // Limpiar formulario solo si no tiene datos ya cargados
+  if (!document.getElementById('repNum').value.trim()) {
+    _limpiarFormFirma();
+  }
 
   // Cargar visor PDF via API
   document.getElementById('pageViewer').innerHTML =
@@ -1322,10 +1403,15 @@ function onRepNumInput(valor) {
 async function buscarRepertorio(numero) {
   try {
     const datos = await invoke('buscar_datos_firma', { numero });
-    if (!datos) return;   // no está en BD — el usuario llena manualmente
+    if (!datos) {
+      mostrarToast(`Repertorio ${numero} no está en la BD`, 'err');
+      return;
+    }
     _rellenarFormFirma(datos);
     mostrarToast(`Repertorio ${numero} encontrado en BD`, 'ok');
-  } catch (e) { /* silencioso */ }
+  } catch (e) {
+    mostrarToast('Error en buscador: ' + e, 'err');
+  }
 }
 
 function _limpiarFormFirma() {
@@ -1567,17 +1653,47 @@ async function reemplazarDuplicado(idx) {
   }
 }
 
+async function reemplazarTodosDuplicados() {
+  const duplicados = window._dupCache;
+  if (!duplicados?.length) return;
+  let ok = 0, err = 0;
+  const filas = document.getElementById('dupLista').children;
+  for (let i = 0; i < duplicados.length; i++) {
+    const d = duplicados[i];
+    try {
+      await invoke('reemplazar_repertorio', { numero: d.numero, datos: d.entrante });
+      ok++;
+      if (filas[i]) {
+        filas[i].style.opacity = '0.4';
+        const btn = filas[i].querySelector('button');
+        if (btn) { btn.disabled = true; btn.textContent = 'Reemplazado'; }
+      }
+    } catch { err++; }
+  }
+  mostrarToast(err === 0 ? `${ok} repertorios reemplazados` : `${ok} reemplazados, ${err} con error`, err === 0 ? 'ok' : 'err');
+  cerrarModalDuplicados();
+}
+
 function cerrarModalDuplicados() {
   document.getElementById('modalDuplicados').classList.add('hidden');
   window._dupCache = null;
 }
 
 // ═══════════════════════════════════════════════════════════════════
-// Cargar base de datos desde Excel
+// Vaciar base de datos
 // ═══════════════════════════════════════════════════════════════════
-async function cargarBDDesdeExcel() {
-  // Función eliminada — usar "Cargar Planilla Repertorios" en su lugar
-  mostrarToast('Usa la función Cargar Planilla Repertorios', 'err');
+async function vaciarBD() {
+  const ok = await window.__TAURI__.dialog.ask(
+    '¿Vaciar TODA la base de datos de repertorios?\nEsta acción no se puede deshacer.',
+    { title: 'Confirmar eliminación', kind: 'warning' }
+  );
+  if (!ok) return;
+  try {
+    await invoke('vaciar_repertorios');
+    mostrarToast('Base de datos vaciada', 'ok');
+  } catch (e) {
+    mostrarToast('Error al vaciar la base de datos: ' + e, 'err');
+  }
 }
 
 // ═══════════════════════════════════════════════════════════════════

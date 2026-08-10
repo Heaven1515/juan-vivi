@@ -1,4 +1,5 @@
 use std::sync::{Arc, Mutex};
+use tauri::Manager;
 
 mod almacenamiento;
 mod modelos;
@@ -17,6 +18,14 @@ mod firma;
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
+        .setup(|app| {
+            #[cfg(debug_assertions)]
+            if let Some(win) = app.get_webview_window("main") {
+                let win: tauri::WebviewWindow = win;
+                win.open_devtools();
+            }
+            Ok(())
+        })
         .plugin(tauri_plugin_shell::init())
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_updater::Builder::new().build())
@@ -30,6 +39,7 @@ pub fn run() {
             repertorios::buscar_repertorio,
             repertorios::reemplazar_repertorio,
             repertorios::cargar_repertorios_excel,
+            repertorios::vaciar_repertorios,
             // Planilla
             planilla_cmd::cargar_excel,
             planilla_cmd::nombre_planilla,

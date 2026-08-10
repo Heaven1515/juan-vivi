@@ -70,6 +70,12 @@ pub fn celda_como_fecha(v: &Data) -> String {
         Data::String(s) => s.split_whitespace().next().unwrap_or("").to_string(),
         Data::Float(f) => serial_a_fecha(*f),
         Data::Int(i) => serial_a_fecha(*i as f64),
+        // calamine 0.26 con feature "dates": as_datetime() convierte correctamente
+        // el serial Excel (incluido el bug de año bisiesto 1900) a NaiveDateTime.
+        Data::DateTime(dt) => dt.as_datetime()
+            .map(|d| d.format("%Y-%m-%d").to_string())
+            .unwrap_or_else(|| serial_a_fecha(dt.as_f64())),
+        Data::DateTimeIso(s) => s.split('T').next().unwrap_or("").to_string(),
         _ => String::new(),
     }
 }
@@ -105,6 +111,11 @@ pub struct ResultadoRepertorios {
 #[command]
 pub fn buscar_repertorio(numero: String) -> Option<Registro> {
     cargar().remove(&numero)
+}
+
+#[command]
+pub fn vaciar_repertorios() -> Result<(), String> {
+    guardar(&HashMap::new()).map_err(|e| e.to_string())
 }
 
 #[command]

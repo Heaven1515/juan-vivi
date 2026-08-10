@@ -89,26 +89,21 @@ fn _buscar_datos(numero: &str) -> Option<ResultadoBusqueda> {
     // Buscar en repertorios.json (BD histórica, fuente única de verdad)
     let reg = crate::repertorios::buscar_repertorio_flexible(buscar)?;
 
-    // Convertir fecha "YYYY-MM-DD"
+    // Parsear fecha "YYYY-MM-DD" — si falla o está vacía, usar ceros.
+    // El frontend muestra los campos vacíos para que el usuario los complete a mano.
     let partes: Vec<&str> = reg.fecha.splitn(3, '-').collect();
-    if partes.len() != 3 {
-        return None;
-    }
-    let anio_str = partes[0];
-    let mes_str = partes[1];
-    let dia_str = partes[2];
-
-    let anio: u32 = anio_str.parse().ok()?;
-    let mes: u32 = mes_str.parse().ok()?;
-    let dia: u32 = dia_str.parse().ok()?;
-
-    if anio == 0 || mes == 0 || dia == 0 {
-        return None;
-    }
+    let (anio, mes, dia, anho_str) = if partes.len() == 3 {
+        let a: u32 = partes[0].parse().unwrap_or(0);
+        let m: u32 = partes[1].parse().unwrap_or(0);
+        let d: u32 = partes[2].parse().unwrap_or(0);
+        (a, m, d, partes[0].to_string())
+    } else {
+        (0u32, 0u32, 0u32, String::new())
+    };
 
     Some(ResultadoBusqueda {
         numero: reg.repertorio,
-        anho: anio_str.to_string(),
+        anho: anho_str,
         tipo_contrato: reg.materia,
         fecha_dia: dia,
         fecha_mes: mes,
@@ -389,6 +384,7 @@ pub async fn toggle_auto(
         let app_clone = app.clone();
         let res_dir = resource_dir.clone();
 
+        let estado_err = Arc::clone(&*state);
         let stop = vigilador::iniciar(carpeta, move |ruta_pdf| {
             let estado = Arc::clone(&estado_arc);
             let _app = app_clone.clone();
@@ -399,6 +395,15 @@ pub async fn toggle_auto(
                 .unwrap_or_default();
             tokio::spawn(async move {
                 _callback_auto(ruta_pdf, nombre, rd, estado).await;
+            });
+        }, move |msg| {
+            let mut g = estado_err.lock().unwrap();
+            g.log.push(EntradaLog {
+                nombre: "vigilador".to_string(),
+                repertorio: "—".to_string(),
+                tipo: "—".to_string(),
+                estado: "error".to_string(),
+                mensaje: msg,
             });
         });
 

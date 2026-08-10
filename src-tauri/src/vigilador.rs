@@ -10,18 +10,22 @@ const INTERVALO: Duration = Duration::from_secs(8);
 const ESPERA_COPIA: Duration = Duration::from_secs(12);
 
 /// Inicia el vigilador de la carpeta `carpeta` en un task de Tokio.
-/// El `callback` se invoca por cada PDF nuevo detectado (tras la espera de 12s).
+/// `callback` se invoca por cada PDF nuevo detectado (tras la espera de 12s).
+/// `on_error` se invoca cuando la carpeta no es accesible (para loguear en UI).
 /// Retorna un `Arc<Notify>` — llamar `.notify_one()` para detener el vigilador.
 pub fn iniciar(
     carpeta: String,
     callback: impl Fn(PathBuf) + Send + Sync + 'static,
+    on_error: impl Fn(String) + Send + Sync + 'static,
 ) -> Arc<Notify> {
     let stop = Arc::new(Notify::new());
     let stop_rx = Arc::clone(&stop);
     let cb = Arc::new(callback);
+    let on_err = Arc::new(on_error);
 
     tokio::spawn(async move {
         let mut vistos: HashSet<PathBuf> = HashSet::new();
+        let mut ultimo_error: Option<String> = None;
 
         // Poblar el set inicial con los PDFs ya presentes
         if let Ok(entradas) = std::fs::read_dir(&carpeta) {
@@ -39,17 +43,28 @@ pub fn iniciar(
                     break;
                 }
                 _ = sleep(INTERVALO) => {
-                    // Buscar PDFs nuevos
                     let nuevos: Vec<PathBuf> = match std::fs::read_dir(&carpeta) {
-                        Ok(entradas) => entradas
-                            .flatten()
-                            .map(|e| e.path())
-                            .filter(|p| {
-                                p.extension().and_then(|e| e.to_str()) == Some("pdf")
-                                    && !vistos.contains(p)
-                            })
-                            .collect(),
-                        Err(_) => continue,
+                        Ok(entradas) => {
+                            // Carpeta accesible — limpiar error previo
+                            ultimo_error = None;
+                            entradas
+                                .flatten()
+                                .map(|e| e.path())
+                                .filter(|p| {
+                                    p.extension().and_then(|e| e.to_str()) == Some("pdf")
+                                        && !vistos.contains(p)
+                                })
+                                .collect()
+                        }
+                        Err(e) => {
+                            // Solo loguear si el error cambió (evitar spam)
+                            let msg = format!("No se puede leer la carpeta '{}': {}", carpeta, e);
+                            if ultimo_error.as_deref() != Some(&msg) {
+                                on_err(msg.clone());
+                                ultimo_error = Some(msg);
+                            }
+                            continue;
+                        }
                     };
 
                     for nuevo in nuevos {
