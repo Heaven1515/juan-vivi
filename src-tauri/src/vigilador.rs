@@ -31,7 +31,7 @@ pub fn iniciar(
         if let Ok(entradas) = std::fs::read_dir(&carpeta) {
             for entrada in entradas.flatten() {
                 let path = entrada.path();
-                if path.extension().and_then(|e| e.to_str()) == Some("pdf") {
+                if path.extension().and_then(|e| e.to_str()).map(|e| e.eq_ignore_ascii_case("pdf")).unwrap_or(false) {
                     vistos.insert(path);
                 }
             }
@@ -51,7 +51,9 @@ pub fn iniciar(
                                 .flatten()
                                 .map(|e| e.path())
                                 .filter(|p| {
-                                    p.extension().and_then(|e| e.to_str()) == Some("pdf")
+                                    p.extension().and_then(|e| e.to_str())
+                                        .map(|e| e.eq_ignore_ascii_case("pdf"))
+                                        .unwrap_or(false)
                                         && !vistos.contains(p)
                                 })
                                 .collect()
