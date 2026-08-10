@@ -153,12 +153,19 @@ fn ocr_primera_pagina(
             .to_string_lossy()
     ));
 
-    let status = std::process::Command::new(&tesseract_exe)
-        .arg(&tmp_png)
+    #[cfg(target_os = "windows")]
+    use std::os::windows::process::CommandExt;
+
+    let mut cmd = std::process::Command::new(&tesseract_exe);
+    cmd.arg(&tmp_png)
         .arg(&output_base)
         .arg("eng")
-        .env("TESSDATA_PREFIX", &tessdata_dir)
-        .output()?;
+        .env("TESSDATA_PREFIX", &tessdata_dir);
+
+    #[cfg(target_os = "windows")]
+    cmd.creation_flags(0x08000000); // CREATE_NO_WINDOW
+
+    let status = cmd.output()?;
 
     // Limpiar PNG temporal
     let _ = std::fs::remove_file(&tmp_png);

@@ -384,8 +384,17 @@ pub async fn toggle_auto(
         let app_clone = app.clone();
         let res_dir = resource_dir.clone();
 
+        // PDFs ya enviados con éxito — no reprocesar
+        let ya_enviados: std::collections::HashSet<std::path::PathBuf> = {
+            let g = state.lock().unwrap();
+            g.log.iter()
+                .filter(|e| e.estado == "ok")
+                .map(|e| std::path::PathBuf::from(&carpeta).join(&e.nombre))
+                .collect()
+        };
+
         let estado_err = Arc::clone(&*state);
-        let stop = vigilador::iniciar(carpeta, move |ruta_pdf| {
+        let stop = vigilador::iniciar(carpeta, ya_enviados, move |ruta_pdf| {
             let estado = Arc::clone(&estado_arc);
             let _app = app_clone.clone();
             let rd = res_dir.clone();

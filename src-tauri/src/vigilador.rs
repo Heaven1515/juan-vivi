@@ -10,11 +10,13 @@ const INTERVALO: Duration = Duration::from_secs(8);
 const ESPERA_COPIA: Duration = Duration::from_secs(12);
 
 /// Inicia el vigilador de la carpeta `carpeta` en un task de Tokio.
+/// `ya_enviados` es el set de rutas que ya fueron procesadas (no se reprocesarán).
 /// `callback` se invoca por cada PDF nuevo detectado (tras la espera de 12s).
 /// `on_error` se invoca cuando la carpeta no es accesible (para loguear en UI).
 /// Retorna un `Arc<Notify>` — llamar `.notify_one()` para detener el vigilador.
 pub fn iniciar(
     carpeta: String,
+    ya_enviados: HashSet<PathBuf>,
     callback: impl Fn(PathBuf) + Send + Sync + 'static,
     on_error: impl Fn(String) + Send + Sync + 'static,
 ) -> Arc<Notify> {
@@ -24,7 +26,7 @@ pub fn iniciar(
     let on_err = Arc::new(on_error);
 
     tokio::spawn(async move {
-        let mut vistos: HashSet<PathBuf> = HashSet::new();
+        let mut vistos: HashSet<PathBuf> = ya_enviados;
         let mut ultimo_error: Option<String> = None;
 
         loop {
