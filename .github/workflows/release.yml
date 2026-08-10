@@ -41,7 +41,7 @@ jobs:
         shell: pwsh
         run: |
           New-Item -ItemType Directory -Force -Path "src-tauri/resources" | Out-Null
-          $release = Invoke-RestMethod -Uri "https://api.github.com/repos/bblanchon/pdfium-binaries/releases/latest"
+          $release = Invoke-RestMethod -Uri "https://api.github.com/repos/bblanchon/pdfium-binaries/releases/latest" -Headers @{ Authorization = "Bearer ${{ secrets.GITHUB_TOKEN }}" }
           $asset = $release.assets | Where-Object { $_.name -eq "pdfium-win-x64.tgz" }
           $url = $asset.browser_download_url
           Invoke-WebRequest -Uri $url -OutFile "pdfium.tgz"
