@@ -27,16 +27,6 @@ pub fn iniciar(
         let mut vistos: HashSet<PathBuf> = HashSet::new();
         let mut ultimo_error: Option<String> = None;
 
-        // Poblar el set inicial con los PDFs ya presentes
-        if let Ok(entradas) = std::fs::read_dir(&carpeta) {
-            for entrada in entradas.flatten() {
-                let path = entrada.path();
-                if path.extension().and_then(|e| e.to_str()).map(|e| e.eq_ignore_ascii_case("pdf")).unwrap_or(false) {
-                    vistos.insert(path);
-                }
-            }
-        }
-
         loop {
             tokio::select! {
                 _ = stop_rx.notified() => {
