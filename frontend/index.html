@@ -1043,8 +1043,8 @@ async function checkUpdate() {
     const { check } = window.__TAURI__.updater;
     const update = await check();
     if (update && update.available) {
-      mostrarToast(`Nueva versión ${update.version} disponible — reinicia la app para instalar`, 'ok');
-      // No instalamos automáticamente para no pisar el build de desarrollo
+      mostrarToast(`Nueva versión ${update.version} disponible — instalando...`, 'ok');
+      await update.downloadAndInstall();
     }
   } catch (e) {
     // updater no disponible en dev — ignorar
