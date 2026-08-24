@@ -130,17 +130,26 @@ pub fn listar_impresoras() -> Result<Vec<String>, String> {
     Ok(lista)
 }
 
-/// Envía un PDF a la impresora indicada usando ShellExecute con verbo "printto".
-/// Funciona con Adobe Reader, Microsoft Edge y cualquier visor con handler registrado.
+/// Envía un PDF a imprimir:
+/// 1. Guarda la impresora predeterminada actual
+/// 2. Pone la impresora elegida como predeterminada via WMI
+/// 3. Usa ShellExecute "print" (funciona con cualquier visor, incluido Edge)
+/// 4. Restaura la impresora original
 fn imprimir_archivo(ruta_pdf: &str, impresora: &str) -> Result<(), String> {
-    // Escapar comillas simples para el script PowerShell
     let ruta_seg = ruta_pdf.replace('\'', "''");
     let imp_seg  = impresora.replace('\'', "''").replace('"', "");
 
-    // Usamos inline C# para llamar a ShellExecute "printto" directamente
-    // El verbo printto envía el PDF a la impresora especificada en lpParameters
     let script = format!(
         r#"
+# Guardar impresora predeterminada actual
+$anterior = (Get-Printer | Where-Object Default -eq $true | Select-Object -First 1).Name
+
+# Poner la impresora elegida como predeterminada
+$wmi = Get-WmiObject -Query "SELECT * FROM Win32_Printer WHERE Name='{imp}'"
+if ($wmi) {{ $wmi.SetDefaultPrinter() | Out-Null }} else {{ Write-Error "Impresora no encontrada: {imp}"; exit 1 }}
+Start-Sleep -Milliseconds 500
+
+# Imprimir con ShellExecute "print" — funciona con Edge y cualquier visor
 Add-Type @"
 using System;
 using System.Runtime.InteropServices;
@@ -150,11 +159,20 @@ public class Shell {{
         IntPtr hwnd, string lpOperation, string lpFile,
         string lpParameters, string lpDirectory, int nShowCmd);
 }}
-"@
-[Shell]::ShellExecute([IntPtr]::Zero, 'printto', '{ruta}', '"{imp}"', '', 0)
+"@ -ErrorAction SilentlyContinue
+[Shell]::ShellExecute([IntPtr]::Zero, 'print', '{ruta}', '', '', 0)
+
+# Dar tiempo al spooler para recibir el trabajo antes de restaurar
+Start-Sleep -Milliseconds 3000
+
+# Restaurar impresora original
+if ($anterior -and $anterior -ne '{imp}') {{
+    $orig = Get-WmiObject -Query "SELECT * FROM Win32_Printer WHERE Name='$anterior'"
+    if ($orig) {{ $orig.SetDefaultPrinter() | Out-Null }}
+}}
 "#,
-        ruta = ruta_seg,
         imp  = imp_seg,
+        ruta = ruta_seg,
     );
 
     let salida = std::process::Command::new("powershell")

@@ -2108,7 +2108,7 @@ dependencies = [
 
 [[package]]
 name = "juan-vivi"
-version = "2.3.4"
+version = "2.4.0"
 dependencies = [
  "anyhow",
  "base64 0.22.1",
