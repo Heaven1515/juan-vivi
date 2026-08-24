@@ -36,6 +36,9 @@ base64 = "0.22"
 dirs = "5"
 zip = { version = "0.6", default-features = false, features = ["deflate"] }
 
+[target.'cfg(windows)'.dependencies]
+winapi = { version = "0.3", features = ["wingdi", "windef"] }
+
 [profile.release]
 panic = "abort"
 codegen-units = 1

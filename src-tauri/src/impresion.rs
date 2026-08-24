@@ -1,6 +1,14 @@
 use std::collections::HashMap;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use serde::Serialize;
+use tauri::{AppHandle, Manager};
+use pdfium_render::prelude::*;
+#[cfg(target_os = "windows")]
+use std::os::windows::process::CommandExt;
+
+// CREATE_NO_WINDOW: evita que aparezca la ventana negra de consola al lanzar PowerShell
+#[cfg(target_os = "windows")]
+const CREATE_NO_WINDOW: u32 = 0x08000000;
 
 // ─── Structs ──────────────────────────────────────────────────────────────────
 
@@ -15,6 +23,139 @@ pub struct ParImpresion {
 pub struct ResultadoCargaZip {
     pub pares: Vec<ParImpresion>,
     pub total: usize,
+}
+
+// ─── Impresión silenciosa vía GDI (sin abrir ningún visor) ────────────────────
+
+/// Renderiza cada página del PDF con pdfium y la envía directamente a la
+/// impresora vía Windows GDI.  No se abre ningún visor de PDF.
+#[cfg(target_os = "windows")]
+fn imprimir_pdf_gdi(ruta: &Path, impresora: &str, pdfium: &Pdfium) -> Result<(), String> {
+    use winapi::um::wingdi::{
+        CreateDCW, DeleteDC, EndDoc, EndPage, GetDeviceCaps,
+        StartDocW, StartPage, StretchDIBits,
+        BITMAPINFO, BITMAPINFOHEADER, DOCINFOW, RGBQUAD,
+        BI_RGB, DIB_RGB_COLORS, SRCCOPY,
+        HORZRES, VERTRES,
+    };
+
+    // ── Crear DC de la impresora ──────────────────────────────────────────────
+    let imp_wide: Vec<u16> = impresora.encode_utf16().chain(std::iter::once(0)).collect();
+
+    let hdc = unsafe {
+        CreateDCW(
+            std::ptr::null(),
+            imp_wide.as_ptr(),
+            std::ptr::null(),
+            std::ptr::null(),
+        )
+    };
+
+    if hdc.is_null() {
+        return Err(format!("No se pudo crear DC para impresora '{}'", impresora));
+    }
+
+    // Dimensiones en píxeles de la hoja en la impresora
+    let page_w = unsafe { GetDeviceCaps(hdc, HORZRES) };
+    let page_h = unsafe { GetDeviceCaps(hdc, VERTRES) };
+
+    // ── Iniciar trabajo de impresión ──────────────────────────────────────────
+    let job_name: Vec<u16> = "JUAN-VIVI".encode_utf16().chain(std::iter::once(0)).collect();
+
+    let doc_info = DOCINFOW {
+        cbSize:       std::mem::size_of::<DOCINFOW>() as i32,
+        lpszDocName:  job_name.as_ptr(),
+        lpszOutput:   std::ptr::null::<u16>() as *mut u16,
+        lpszDatatype: std::ptr::null::<u16>() as *mut u16,
+        fwType:       0,
+    };
+
+    let job_id = unsafe { StartDocW(hdc, &doc_info) };
+    if job_id <= 0 {
+        unsafe { DeleteDC(hdc) };
+        return Err(format!("StartDocW falló (code={})", job_id));
+    }
+
+    // ── Cargar PDF con pdfium ─────────────────────────────────────────────────
+    let doc = pdfium
+        .load_pdf_from_file(ruta, None)
+        .map_err(|e| format!("pdfium load: {:?}", e))?;
+
+    let total = doc.pages().len();
+
+    for i in 0..total {
+        unsafe { StartPage(hdc) };
+
+        let page = match doc.pages().get(i) {
+            Ok(p) => p,
+            Err(e) => {
+                // Si una página falla, terminamos el trabajo limpiamente
+                unsafe { EndPage(hdc); EndDoc(hdc); DeleteDC(hdc); }
+                return Err(format!("pdfium página {}: {:?}", i, e));
+            }
+        };
+
+        // Renderizar a ~300 DPI (base PDF = 72 DPI → factor ≈ 4.17)
+        let scale = 300.0_f32 / 72.0_f32;
+        let config = PdfRenderConfig::new().scale_page_by_factor(scale);
+        let bitmap = match page.render_with_config(&config) {
+            Ok(b) => b,
+            Err(e) => {
+                unsafe { EndPage(hdc); EndDoc(hdc); DeleteDC(hdc); }
+                return Err(format!("pdfium render {}: {:?}", i, e));
+            }
+        };
+
+        let img = bitmap.as_image().to_rgba8();
+        let (img_w, img_h) = img.dimensions();
+
+        // Convertir RGBA → BGRA (Windows GDI espera BGR little-endian)
+        let raw = img.into_raw();
+        let mut bgra: Vec<u8> = Vec::with_capacity(raw.len());
+        for chunk in raw.chunks_exact(4) {
+            bgra.push(chunk[2]); // B
+            bgra.push(chunk[1]); // G
+            bgra.push(chunk[0]); // R
+            bgra.push(chunk[3]); // A
+        }
+
+        let bmi = BITMAPINFO {
+            bmiHeader: BITMAPINFOHEADER {
+                biSize:          std::mem::size_of::<BITMAPINFOHEADER>() as u32,
+                biWidth:         img_w as i32,
+                biHeight:        -(img_h as i32), // negativo = top-down (el origen es arriba)
+                biPlanes:        1,
+                biBitCount:      32,
+                biCompression:   BI_RGB,
+                biSizeImage:     0,
+                biXPelsPerMeter: 0,
+                biYPelsPerMeter: 0,
+                biClrUsed:       0,
+                biClrImportant:  0,
+            },
+            bmiColors: [RGBQUAD { rgbBlue: 0, rgbGreen: 0, rgbRed: 0, rgbReserved: 0 }],
+        };
+
+        unsafe {
+            StretchDIBits(
+                hdc,
+                0, 0, page_w, page_h,           // destino: toda la hoja imprimible
+                0, 0, img_w as i32, img_h as i32, // fuente: toda la imagen renderizada
+                bgra.as_ptr() as *const _,
+                &bmi,
+                DIB_RGB_COLORS,
+                SRCCOPY,
+            );
+            EndPage(hdc);
+        }
+    }
+
+    unsafe {
+        EndDoc(hdc);
+        DeleteDC(hdc);
+    }
+
+    Ok(())
 }
 
 // ─── Comandos ─────────────────────────────────────────────────────────────────
@@ -47,10 +188,8 @@ pub fn cargar_zip(ruta: String) -> Result<ResultadoCargaZip, String> {
         let mut entry = zip.by_index(i)
             .map_err(|e| format!("Error leyendo entrada ZIP {}: {}", i, e))?;
 
-        // zip 0.6 usa name() que devuelve &str directamente
         let nombre_zip = entry.name().to_string();
 
-        // Determinar a qué carpeta pertenece la entrada
         let (mapa, dir_destino) = if nombre_zip.starts_with("notaria/") {
             (&mut notaria, dir_temp.join("notaria"))
         } else if nombre_zip.starts_with("firmados/") {
@@ -59,13 +198,11 @@ pub fn cargar_zip(ruta: String) -> Result<ResultadoCargaZip, String> {
             continue;
         };
 
-        // Solo archivos PDF (extensión case-insensitive)
         let nombre_archivo = match nombre_zip.split('/').last() {
             Some(n) if n.to_lowercase().ends_with(".pdf") => n.to_string(),
             _ => continue,
         };
 
-        // Clave en minúsculas para deduplicar (mismo archivo repetido en el ZIP)
         let clave = nombre_archivo.to_lowercase();
         if mapa.contains_key(&clave) {
             continue;
@@ -117,6 +254,7 @@ pub fn listar_impresoras() -> Result<Vec<String>, String> {
             "-NoProfile", "-NonInteractive", "-Command",
             "Get-Printer | Select-Object -ExpandProperty Name",
         ])
+        .creation_flags(CREATE_NO_WINDOW)
         .output()
         .map_err(|e| format!("Error listando impresoras: {}", e))?;
 
@@ -130,73 +268,30 @@ pub fn listar_impresoras() -> Result<Vec<String>, String> {
     Ok(lista)
 }
 
-/// Envía un PDF a imprimir:
-/// 1. Guarda la impresora predeterminada actual
-/// 2. Pone la impresora elegida como predeterminada via WMI
-/// 3. Usa ShellExecute "print" (funciona con cualquier visor, incluido Edge)
-/// 4. Restaura la impresora original
-fn imprimir_archivo(ruta_pdf: &str, impresora: &str) -> Result<(), String> {
-    let ruta_seg = ruta_pdf.replace('\'', "''");
-    let imp_seg  = impresora.replace('\'', "''").replace('"', "");
-
-    let script = format!(
-        r#"
-# Guardar impresora predeterminada actual
-$anterior = (Get-Printer | Where-Object Default -eq $true | Select-Object -First 1).Name
-
-# Poner la impresora elegida como predeterminada
-$wmi = Get-WmiObject -Query "SELECT * FROM Win32_Printer WHERE Name='{imp}'"
-if ($wmi) {{ $wmi.SetDefaultPrinter() | Out-Null }} else {{ Write-Error "Impresora no encontrada: {imp}"; exit 1 }}
-Start-Sleep -Milliseconds 500
-
-# Imprimir con ShellExecute "print" — funciona con Edge y cualquier visor
-Add-Type @"
-using System;
-using System.Runtime.InteropServices;
-public class Shell {{
-    [DllImport("shell32.dll", CharSet = CharSet.Auto)]
-    public static extern IntPtr ShellExecute(
-        IntPtr hwnd, string lpOperation, string lpFile,
-        string lpParameters, string lpDirectory, int nShowCmd);
-}}
-"@ -ErrorAction SilentlyContinue
-[Shell]::ShellExecute([IntPtr]::Zero, 'print', '{ruta}', '', '', 0)
-
-# Dar tiempo al spooler para recibir el trabajo antes de restaurar
-Start-Sleep -Milliseconds 3000
-
-# Restaurar impresora original
-if ($anterior -and $anterior -ne '{imp}') {{
-    $orig = Get-WmiObject -Query "SELECT * FROM Win32_Printer WHERE Name='$anterior'"
-    if ($orig) {{ $orig.SetDefaultPrinter() | Out-Null }}
-}}
-"#,
-        imp  = imp_seg,
-        ruta = ruta_seg,
-    );
-
-    let salida = std::process::Command::new("powershell")
-        .args([
-            "-NoProfile", "-NonInteractive",
-            "-WindowStyle", "Hidden",
-            "-Command", &script,
-        ])
-        .output()
-        .map_err(|e| format!("Error lanzando impresión: {}", e))?;
-
-    if !salida.status.success() {
-        let err = String::from_utf8_lossy(&salida.stderr);
-        return Err(format!("Error de impresión: {}", err.trim()));
-    }
-    Ok(())
-}
-
-/// Imprime un par completo: primero el PDF de notaria, luego el de firmados.
-/// La pausa entre ambos asegura que el spooler los mantenga en orden.
+/// Imprime un par completo vía GDI: notaria primero, luego firmados.
+/// Completamente silencioso — no abre ningún visor de PDF.
 #[tauri::command]
-pub fn imprimir_par(notaria: String, firmados: String, impresora: String) -> Result<(), String> {
-    imprimir_archivo(&notaria, &impresora)?;
-    std::thread::sleep(std::time::Duration::from_millis(800));
-    imprimir_archivo(&firmados, &impresora)?;
-    Ok(())
+pub async fn imprimir_par(
+    notaria: String,
+    firmados: String,
+    impresora: String,
+    app: AppHandle,
+) -> Result<(), String> {
+    let resource_dir = app
+        .path()
+        .resource_dir()
+        .map_err(|e| e.to_string())?;
+
+    tokio::task::spawn_blocking(move || {
+        let pdfium = crate::ocr::crear_pdfium(&resource_dir)
+            .map_err(|e| e.to_string())?;
+
+        imprimir_pdf_gdi(Path::new(&notaria), &impresora, &pdfium)?;
+        std::thread::sleep(std::time::Duration::from_millis(800));
+        imprimir_pdf_gdi(Path::new(&firmados), &impresora, &pdfium)?;
+
+        Ok(())
+    })
+    .await
+    .map_err(|e| e.to_string())?
 }
