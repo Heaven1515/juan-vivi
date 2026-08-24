@@ -14,6 +14,14 @@ mod signplus;
 mod vigilador;
 mod ocr;
 mod firma;
+mod impresion;
+
+/// Retorna true si la app corre en modo desarrollo (cargo tauri dev).
+/// Usado por el frontend para saltar el auto-updater en dev.
+#[tauri::command]
+fn es_dev() -> bool {
+    cfg!(debug_assertions)
+}
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
@@ -54,6 +62,12 @@ pub fn run() {
             firma::estado_auto,
             firma::get_log_firma,
             firma::buscar_datos_firma,
+            // Utilidades
+            es_dev,
+            // Impresión
+            impresion::cargar_zip,
+            impresion::listar_impresoras,
+            impresion::imprimir_par,
         ])
         .run(tauri::generate_context!())
         .expect("error al iniciar JUAN-VIVI");

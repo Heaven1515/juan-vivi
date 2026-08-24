@@ -250,6 +250,11 @@ pub async fn _callback_auto(
         },
     };
 
+    // Envío exitoso: eliminar el PDF de la carpeta para no procesarlo dos veces
+    if entrada.estado == "ok" {
+        let _ = std::fs::remove_file(&ruta_pdf);
+    }
+
     let mut g = estado.lock().unwrap();
     g.log.push(entrada);
 }
@@ -355,6 +360,13 @@ pub async fn enviar_pdf(
 ) -> Result<EntradaLog, String> {
     let carpeta = state.lock().unwrap().carpeta.clone();
     let entrada = enviar_pdf_interno(&carpeta, &datos).await?;
+
+    // Envío exitoso: eliminar el PDF de la carpeta fuente
+    if entrada.estado == "ok" {
+        let ruta_pdf = PathBuf::from(&carpeta).join(&datos.nombre);
+        let _ = std::fs::remove_file(&ruta_pdf);
+    }
+
     state.lock().unwrap().log.push(entrada.clone());
     Ok(entrada)
 }

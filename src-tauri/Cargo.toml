@@ -1,6 +1,6 @@
 [package]
 name = "juan-vivi"
-version = "2.3.4"
+version = "2.4.0"
 edition = "2021"
 
 [package.metadata.bundle]
@@ -34,6 +34,7 @@ regex = "1"
 chrono = { version = "0.4", features = ["serde"] }
 base64 = "0.22"
 dirs = "5"
+zip = { version = "0.6", default-features = false, features = ["deflate"] }
 
 [profile.release]
 panic = "abort"
