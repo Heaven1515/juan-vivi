@@ -250,8 +250,9 @@ pub async fn _callback_auto(
         },
     };
 
-    // Envío exitoso: eliminar el PDF de la carpeta para no procesarlo dos veces
+    // Envío exitoso: registrar en disco y eliminar el PDF de la carpeta
     if entrada.estado == "ok" {
+        crate::almacenamiento::marcar_enviado(&nombre);
         let _ = std::fs::remove_file(&ruta_pdf);
     }
 
@@ -278,10 +279,16 @@ pub fn listar_pdfs(state: State<'_, Arc<Mutex<EstadoFirma>>>) -> Vec<InfoPdf> {
     let log = g.log.clone();
     drop(g);
 
-    let ya_enviados: std::collections::HashSet<String> = log
+    // Combinar log en memoria + registro persistente en disco
+    let ya_enviados_mem: std::collections::HashSet<String> = log
         .iter()
         .filter(|e| e.estado == "ok")
         .map(|e| e.nombre.clone())
+        .collect();
+    let ya_enviados_disco = crate::almacenamiento::cargar_enviados();
+    let ya_enviados: std::collections::HashSet<String> = ya_enviados_mem
+        .union(&ya_enviados_disco)
+        .cloned()
         .collect();
 
     match std::fs::read_dir(&carpeta) {
@@ -361,8 +368,9 @@ pub async fn enviar_pdf(
     let carpeta = state.lock().unwrap().carpeta.clone();
     let entrada = enviar_pdf_interno(&carpeta, &datos).await?;
 
-    // Envío exitoso: eliminar el PDF de la carpeta fuente
+    // Envío exitoso: registrar en disco y eliminar el PDF de la carpeta fuente
     if entrada.estado == "ok" {
+        crate::almacenamiento::marcar_enviado(&datos.nombre);
         let ruta_pdf = PathBuf::from(&carpeta).join(&datos.nombre);
         let _ = std::fs::remove_file(&ruta_pdf);
     }
@@ -396,12 +404,16 @@ pub async fn toggle_auto(
         let app_clone = app.clone();
         let res_dir = resource_dir.clone();
 
-        // PDFs ya enviados con éxito — no reprocesar
+        // PDFs ya enviados con éxito — combinar memoria + disco para no reprocesar
         let ya_enviados: std::collections::HashSet<std::path::PathBuf> = {
             let g = state.lock().unwrap();
-            g.log.iter()
+            let desde_mem: std::collections::HashSet<String> = g.log.iter()
                 .filter(|e| e.estado == "ok")
-                .map(|e| std::path::PathBuf::from(&carpeta).join(&e.nombre))
+                .map(|e| e.nombre.clone())
+                .collect();
+            let desde_disco = crate::almacenamiento::cargar_enviados();
+            desde_mem.union(&desde_disco)
+                .map(|nombre| std::path::PathBuf::from(&carpeta).join(nombre))
                 .collect()
         };
 
